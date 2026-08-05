@@ -1,0 +1,69 @@
+@import "tailwindcss";
+
+@layer utilities {
+  .font-display {
+    font-family: 'Fredoka', 'Nunito', system-ui, sans-serif;
+  }
+  .font-body {
+    font-family: 'Nunito', system-ui, sans-serif;
+  }
+  .perspective-1000 {
+    perspective: 1000px;
+  }
+  .transform-style-3d {
+    transform-style: preserve-3d;
+  }
+  .backface-hidden {
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+  }
+  .rotate-y-180 {
+    transform: rotateY(180deg);
+  }
+
+  /* Frosted Glass Theme Utilities */
+  .frosted {
+    background: rgba(255, 255, 255, 0.65);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    box-shadow: 0 8px 32px rgba(180, 140, 90, 0.08);
+  }
+
+  .frosted-dark {
+    background: rgba(255, 252, 245, 0.85);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(217, 156, 59, 0.25);
+    box-shadow: 0 12px 40px rgba(74, 141, 145, 0.12);
+  }
+
+  .btn-active:active {
+    transform: scale(0.96);
+  }
+
+  .habitat-savana {
+    background-color: #d99c3b;
+    color: #ffffff;
+  }
+
+  .habitat-oceano {
+    background-color: #4a8d91;
+    color: #ffffff;
+  }
+
+  .habitat-foresta {
+    background-color: #8ba888;
+    color: #ffffff;
+  }
+}
+
+@keyframes floatSlow {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-6px); }
+}
+
+.animate-float {
+  animation: floatSlow 4s ease-in-out infinite;
+}
+
