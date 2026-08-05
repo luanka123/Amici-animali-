@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { Volume2, ChevronLeft, ChevronRight, RotateCw, Sparkles, Lightbulb } from 'lucide-react';
+import { Volume2, ChevronLeft, ChevronRight, Sparkles, Lightbulb, Camera, Info } from 'lucide-react';
 import { Animal } from '../types';
 import { HabitatBadge } from './HabitatBadge';
 import { StatCard } from './StatCard';
 import { sound } from '../utils/audio';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface CardScopriProps {
   animals: Animal[];
@@ -18,7 +19,7 @@ export const CardScopri: React.FC<CardScopriProps> = ({
   onIndexChange,
   onAnimalViewed,
 }) => {
-  const [isFlipped, setIsFlipped] = useState<boolean>(false);
+  const [activeTab, setActiveTab] = useState<'foto' | 'dettagli'>('foto');
   const [isSpeaking, setIsSpeaking] = useState<boolean>(false);
 
   const currentAnimal = animals[currentIndex];
@@ -30,34 +31,25 @@ export const CardScopri: React.FC<CardScopriProps> = ({
     }
   }, [currentAnimal, onAnimalViewed]);
 
-  const handleFlip = () => {
-    sound.playFlip();
-    setIsFlipped(!isFlipped);
-    if (currentAnimal && onAnimalViewed) {
-      onAnimalViewed(currentAnimal.id);
-    }
-  };
-
-
   const handleNext = () => {
     sound.playPop();
-    setIsFlipped(false);
+    setActiveTab('foto');
     onIndexChange((currentIndex + 1) % animals.length);
   };
 
   const handlePrev = () => {
     sound.playPop();
-    setIsFlipped(false);
+    setActiveTab('foto');
     onIndexChange((currentIndex - 1 + animals.length) % animals.length);
   };
 
   const handleSpeak = (e: React.MouseEvent) => {
-    e.stopPropagation(); // Don't trigger flip when clicking speak button
+    e.stopPropagation();
     sound.playPop();
     setIsSpeaking(true);
 
     let textToSpeak = '';
-    if (!isFlipped) {
+    if (activeTab === 'foto') {
       textToSpeak = `${currentAnimal.nome}. Habitat: ${currentAnimal.habitat}.`;
     } else {
       textToSpeak = `${currentAnimal.nome}. Lo sapevi che? ${currentAnimal.fattoCurioso}. Peso: ${currentAnimal.statistiche.peso}. Velocità: ${currentAnimal.statistiche.velocita}.`;
@@ -71,145 +63,192 @@ export const CardScopri: React.FC<CardScopriProps> = ({
   };
 
   return (
-    <div className="w-full max-w-xl mx-auto flex flex-col items-center gap-6 px-4 py-4">
-      {/* Target Audience Badge & Guidance */}
-      <div className="flex items-center justify-between w-full bg-amber-100/90 border border-amber-300 px-4 py-2 rounded-2xl shadow-xs">
+    <div className="w-full max-w-2xl mx-auto flex flex-col items-center gap-5 px-4 py-2">
+      {/* Top Banner Guidance */}
+      <div className="flex items-center justify-between w-full frosted border border-amber-300/80 px-4 py-2.5 rounded-2xl shadow-xs">
         <div className="flex items-center gap-2">
-          <span className="text-xl">👀</span>
-          <p className="text-xs md:text-sm font-bold text-amber-950">
-            Guarda la foto, impara il nome e tocca per scoprire i segreti!
+          <span className="text-xl">🐾</span>
+          <p className="text-xs md:text-sm font-black text-amber-950">
+            1. Scopri le foto, il nome e le curiosità di ogni animale!
           </p>
         </div>
-        <div className="text-xs font-black text-amber-800 bg-amber-200/80 px-2.5 py-1 rounded-xl">
+        <div className="text-xs font-black text-amber-900 bg-amber-200/90 px-3 py-1 rounded-xl shadow-2xs">
           {currentIndex + 1} / {animals.length}
         </div>
       </div>
 
-      {/* 3D Flip Card Container */}
-      <div className="w-full perspective-1000 min-h-[480px] md:min-h-[520px]">
-        <div
-          onClick={handleFlip}
-          className={`relative w-full h-full cursor-pointer transition-transform duration-700 transform-style-3d ${
-            isFlipped ? 'rotate-y-180' : ''
-          }`}
-        >
-          {/* ================= CARD FRONT ================= */}
-          <div className="absolute inset-0 w-full h-full bg-white rounded-3xl border-4 border-amber-200 shadow-2xl shadow-amber-900/10 p-5 flex flex-col justify-between backface-hidden select-none hover:border-amber-300 transition-colors">
-            {/* Card Header Top */}
-            <div className="flex items-center justify-between z-10">
-              <HabitatBadge habitat={currentAnimal.habitat} size="lg" />
-              
-              <div className="flex items-center gap-2">
-                {/* Audio Button */}
-                <button
-                  onClick={handleSpeak}
-                  className={`p-2.5 rounded-full shadow-md transition-all active:scale-90 ${
-                    isSpeaking
-                      ? 'bg-amber-500 text-white animate-bounce'
-                      : 'bg-amber-100 text-amber-900 hover:bg-amber-200'
-                  }`}
-                  title="Ascolta la pronuncia"
-                >
-                  <Volume2 className="w-5 h-5" />
-                </button>
-              </div>
-            </div>
+      {/* Main Interactive Animal Card */}
+      <div className="w-full frosted rounded-[32px] border-2 border-amber-300 shadow-lg overflow-hidden bg-white/90 p-5 space-y-4">
+        {/* Card Header: Habitat & Speech Audio */}
+        <div className="flex items-center justify-between">
+          <HabitatBadge habitat={currentAnimal.habitat} size="lg" />
 
-            {/* Animal Main Photo */}
-            <div className="relative my-3 w-full flex-1 rounded-2xl overflow-hidden shadow-inner bg-amber-50 border border-amber-100 group">
-              <img
-                src={currentAnimal.foto}
-                alt={currentAnimal.fotoAlt || currentAnimal.nome}
-                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                loading="eager"
-              />
-              {/* Decorative Subtle Overlay Gradient */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent pointer-events-none" />
-              
-              {/* Front Animal Name Overlay */}
-              <div className="absolute bottom-3 left-3 right-3 text-white">
-                <h2 className="text-3xl md:text-4xl font-black font-display tracking-wide drop-shadow-md">
-                  {currentAnimal.nome}
-                </h2>
-              </div>
-            </div>
-
-            {/* Card Bottom Flip Prompt */}
-            <div className="flex items-center justify-center gap-2 text-amber-900/80 font-bold text-sm bg-amber-50 py-2.5 px-4 rounded-xl border border-amber-200/80">
-              <RotateCw className="w-4 h-4 text-amber-600 animate-spin-slow" />
-              <span>Tocca la carta per girarla!</span>
-            </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleSpeak}
+              className={`p-2.5 rounded-full shadow-md transition-all btn-active ${
+                isSpeaking
+                  ? 'bg-amber-500 text-white animate-bounce'
+                  : 'bg-amber-100 hover:bg-amber-200 text-amber-900 border border-amber-300'
+              }`}
+              title="Ascolta la pronuncia o la descrizione"
+            >
+              <Volume2 className="w-5 h-5" />
+            </button>
           </div>
+        </div>
 
-          {/* ================= CARD BACK ================= */}
-          <div className="absolute inset-0 w-full h-full bg-[#FFFDF7] rounded-3xl border-4 border-amber-300 shadow-2xl shadow-amber-900/10 p-5 flex flex-col justify-between backface-hidden rotate-y-180 select-none overflow-y-auto">
-            {/* Back Header */}
-            <div className="flex items-center justify-between pb-2 border-b border-amber-100">
-              <div className="flex items-center gap-3">
+        {/* Tab Switcher: Foto vs Curiosità */}
+        <div className="flex bg-amber-100/80 p-1 rounded-2xl border border-amber-200/80 gap-1">
+          <button
+            onClick={() => {
+              sound.playPop();
+              setActiveTab('foto');
+            }}
+            className={`flex-1 py-2 rounded-xl font-extrabold text-xs md:text-sm transition-all flex items-center justify-center gap-2 btn-active ${
+              activeTab === 'foto'
+                ? 'bg-amber-500 text-white shadow-xs'
+                : 'text-amber-900 hover:bg-amber-200/60'
+            }`}
+          >
+            <Camera className="w-4 h-4" />
+            <span>Foto Grande</span>
+          </button>
+
+          <button
+            onClick={() => {
+              sound.playPop();
+              setActiveTab('dettagli');
+            }}
+            className={`flex-1 py-2 rounded-xl font-extrabold text-xs md:text-sm transition-all flex items-center justify-center gap-2 btn-active ${
+              activeTab === 'dettagli'
+                ? 'bg-amber-500 text-white shadow-xs'
+                : 'text-amber-900 hover:bg-amber-200/60'
+            }`}
+          >
+            <Lightbulb className="w-4 h-4" />
+            <span>Curiosità & Statistiche</span>
+          </button>
+        </div>
+
+        {/* Content View Container with Smooth Transition */}
+        <AnimatePresence mode="wait">
+          {activeTab === 'foto' ? (
+            <motion.div
+              key="tab-foto"
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 10 }}
+              transition={{ duration: 0.2 }}
+              className="space-y-4"
+            >
+              {/* Large Animal Image */}
+              <div className="relative aspect-4/3 w-full rounded-2xl overflow-hidden border-2 border-amber-200 shadow-md bg-amber-50 group">
                 <img
                   src={currentAnimal.foto}
                   alt={currentAnimal.nome}
-                  className="w-12 h-12 rounded-xl object-cover border-2 border-amber-300 shadow-xs"
+                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                  loading="eager"
                 />
-                <div>
-                  <h3 className="text-2xl font-black font-display text-amber-950">
-                    {currentAnimal.nome}
-                  </h3>
-                  <HabitatBadge habitat={currentAnimal.habitat} size="sm" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none" />
+
+                <div className="absolute bottom-4 left-4 right-4 text-white flex items-end justify-between">
+                  <div>
+                    <h2 className="text-3xl md:text-4xl font-black font-display tracking-wide drop-shadow-md">
+                      {currentAnimal.nome}
+                    </h2>
+                    <p className="text-xs font-bold text-amber-200/90 capitalize mt-0.5">
+                      Habitat: {currentAnimal.habitat}
+                    </p>
+                  </div>
+
+                  <button
+                    onClick={handleSpeak}
+                    className="p-3 bg-amber-500 hover:bg-amber-600 text-white rounded-2xl shadow-lg transition-transform active:scale-95"
+                  >
+                    <Volume2 className="w-5 h-5" />
+                  </button>
                 </div>
               </div>
 
-              {/* Speak button on Back */}
+              {/* Action Button to View Details */}
               <button
-                onClick={handleSpeak}
-                className={`p-2.5 rounded-full shadow-md transition-all active:scale-90 ${
-                  isSpeaking
-                    ? 'bg-amber-500 text-white animate-bounce'
-                    : 'bg-amber-100 text-amber-900 hover:bg-amber-200'
-                }`}
-                title="Ascolta le curiosità"
+                onClick={() => {
+                  sound.playPop();
+                  setActiveTab('dettagli');
+                }}
+                className="w-full py-3 bg-amber-100 hover:bg-amber-200 text-amber-950 font-black text-sm rounded-2xl border border-amber-300 transition-all flex items-center justify-center gap-2 btn-active shadow-2xs"
               >
-                <Volume2 className="w-5 h-5" />
+                <Lightbulb className="w-4 h-4 text-amber-600" />
+                <span>Scopri i segreti e le curiosità di {currentAnimal.nome}!</span>
               </button>
-            </div>
-
-            {/* Fun Fact Section */}
-            <div className="my-3 p-3.5 bg-amber-100/70 border border-amber-200 rounded-2xl flex items-start gap-2.5">
-              <div className="p-1.5 bg-amber-500 text-white rounded-xl shadow-xs mt-0.5 flex-shrink-0">
-                <Lightbulb className="w-4 h-4" />
+            </motion.div>
+          ) : (
+            <motion.div
+              key="tab-dettagli"
+              initial={{ opacity: 0, x: 10 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -10 }}
+              transition={{ duration: 0.2 }}
+              className="space-y-4"
+            >
+              {/* Header Banner with Animal Image so photo is ALWAYS visible */}
+              <div className="flex items-center gap-3 p-3 bg-amber-50 rounded-2xl border border-amber-200">
+                <img
+                  src={currentAnimal.foto}
+                  alt={currentAnimal.nome}
+                  className="w-20 h-20 rounded-xl object-cover border-2 border-amber-300 shadow-sm shrink-0"
+                />
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-2xl font-black font-display text-amber-950 truncate">
+                    {currentAnimal.nome}
+                  </h3>
+                  <p className="text-xs font-bold text-amber-800/80">
+                    Scheda Informativa per Piccoli Esploratori
+                  </p>
+                </div>
               </div>
-              <div className="flex flex-col">
-                <span className="text-xs font-black text-amber-900 uppercase tracking-wide">
-                  Lo sapevi che...?
-                </span>
-                <p className="text-sm font-semibold text-amber-950 leading-snug mt-0.5">
+
+              {/* Fun Fact Section */}
+              <div className="p-4 bg-amber-100/80 border border-amber-300/80 rounded-2xl space-y-1">
+                <div className="flex items-center gap-2 text-xs font-black text-amber-950 uppercase tracking-wide">
+                  <Sparkles className="w-4 h-4 text-amber-600 fill-amber-500" />
+                  <span>Lo sapevi che...?</span>
+                </div>
+                <p className="text-sm md:text-base font-bold text-amber-950 leading-relaxed pt-1">
                   "{currentAnimal.fattoCurioso}"
                 </p>
               </div>
-            </div>
 
-            {/* 4 Stat Cards Grid 2x2 */}
-            <div className="grid grid-cols-2 gap-2.5 my-1">
-              <StatCard tipo="peso" valore={currentAnimal.statistiche.peso} />
-              <StatCard tipo="velocita" valore={currentAnimal.statistiche.velocita} />
-              <StatCard tipo="lunghezza" valore={currentAnimal.statistiche.lunghezza} />
-              <StatCard tipo="longevita" valore={currentAnimal.statistiche.longevita} />
-            </div>
+              {/* Stat Cards Grid */}
+              <div className="grid grid-cols-2 gap-2.5">
+                <StatCard tipo="peso" valore={currentAnimal.statistiche.peso} />
+                <StatCard tipo="velocita" valore={currentAnimal.statistiche.velocita} />
+                <StatCard tipo="lunghezza" valore={currentAnimal.statistiche.lunghezza} />
+                <StatCard tipo="longevita" valore={currentAnimal.statistiche.longevita} />
+              </div>
 
-            {/* Back Prompt to Flip Back */}
-            <div className="flex items-center justify-center gap-2 text-xs font-bold text-amber-800/80 pt-2 border-t border-amber-100">
-              <RotateCw className="w-3.5 h-3.5 text-amber-600" />
-              <span>Tocca per tornare al fronte</span>
-            </div>
-          </div>
-        </div>
+              {/* Back to Photo Button */}
+              <button
+                onClick={() => {
+                  sound.playPop();
+                  setActiveTab('foto');
+                }}
+                className="w-full py-2.5 bg-stone-100 hover:bg-amber-100 text-stone-800 font-extrabold text-xs rounded-xl border border-stone-300 transition-all flex items-center justify-center gap-2 btn-active"
+              >
+                <Camera className="w-4 h-4 text-amber-600" />
+                <span>Ritorna alla Foto Grande</span>
+              </button>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
       {/* Bottom Navigation Controls */}
-      <div className="flex items-center justify-between w-full gap-3 pt-2">
+      <div className="flex items-center justify-between w-full gap-3 pt-1">
         <button
           onClick={handlePrev}
-          className="flex-1 flex items-center justify-center gap-2 bg-white text-amber-950 border-2 border-amber-200 hover:border-amber-400 font-extrabold py-3 px-4 rounded-2xl shadow-md transition-all active:scale-95"
+          className="flex-1 flex items-center justify-center gap-2 bg-white text-amber-950 border-2 border-amber-200 hover:border-amber-400 font-black py-3 px-4 rounded-2xl shadow-xs transition-all btn-active"
         >
           <ChevronLeft className="w-5 h-5 text-amber-600" />
           <span>Precedente</span>
@@ -217,7 +256,7 @@ export const CardScopri: React.FC<CardScopriProps> = ({
 
         <button
           onClick={handleNext}
-          className="flex-2 flex items-center justify-center gap-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-extrabold py-3 px-6 rounded-2xl shadow-lg shadow-orange-500/25 transition-all active:scale-95 hover:brightness-105"
+          className="flex-2 flex items-center justify-center gap-2 bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 text-white font-black py-3 px-6 rounded-2xl shadow-md transition-all btn-active"
         >
           <span>Prossimo Animale</span>
           <ChevronRight className="w-5 h-5" />
@@ -225,16 +264,16 @@ export const CardScopri: React.FC<CardScopriProps> = ({
       </div>
 
       {/* Quick Jump Thumbnail Bar */}
-      <div className="w-full bg-white/80 p-2.5 rounded-2xl border border-amber-200/80 shadow-xs flex items-center justify-between gap-1 overflow-x-auto">
+      <div className="w-full frosted p-2.5 rounded-2xl border border-amber-200/80 shadow-2xs flex items-center justify-between gap-1 overflow-x-auto no-scrollbar">
         {animals.map((a, idx) => (
           <button
             key={a.id}
             onClick={() => {
               sound.playPop();
-              setIsFlipped(false);
+              setActiveTab('foto');
               onIndexChange(idx);
             }}
-            className={`flex-shrink-0 relative rounded-xl overflow-hidden border-2 transition-all p-0.5 active:scale-95 ${
+            className={`flex-shrink-0 relative rounded-xl overflow-hidden border-2 transition-all p-0.5 btn-active ${
               idx === currentIndex
                 ? 'border-amber-500 ring-2 ring-amber-300 shadow-md scale-105'
                 : 'border-transparent opacity-60 hover:opacity-100'
@@ -248,3 +287,4 @@ export const CardScopri: React.FC<CardScopriProps> = ({
     </div>
   );
 };
+
