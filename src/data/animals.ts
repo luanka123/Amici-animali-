@@ -299,7 +299,7 @@ const ANIMALI_RAW: Animal[] = [
   {
     id: 'balena-azzurra',
     nome: 'Balena Azzurra',
-    foto: 'https://images.unsplash.com/photo-1568430462989-44163eb1752f?auto=format&fit=crop&w=1000&q=80',
+    foto: 'https://images.unsplash.com/photo-1559827291-72ee739d0d9a?auto=format&fit=crop&w=1200&q=80',
     habitat: 'oceano',
     statistiche: {
       peso: '150000 kg',
@@ -387,7 +387,7 @@ const ANIMALI_RAW: Animal[] = [
   {
     id: 'narvalo',
     nome: 'Narvalo',
-    foto: 'https://images.unsplash.com/photo-1518467166778-b88f373ffec7?auto=format&fit=crop&w=1000&q=80',
+    foto: 'https://images.unsplash.com/photo-1516683018641-547af6c26820?auto=format&fit=crop&w=1200&q=80',
     habitat: 'oceano',
     statistiche: {
       peso: '900 kg',
@@ -721,7 +721,7 @@ const ANIMALI_RAW: Animal[] = [
   {
     id: 'velociraptor',
     nome: 'Velociraptor',
-    foto: 'https://images.unsplash.com/photo-1569317002804-ab77bcf1bce4?auto=format&fit=crop&w=1000&q=80',
+    foto: 'https://images.unsplash.com/photo-1551244072-5d12893278ab?auto=format&fit=crop&w=1000&q=80',
     habitat: 'dinosauri',
     statistiche: {
       peso: '20 kg',
@@ -743,7 +743,7 @@ const ANIMALI_RAW: Animal[] = [
   {
     id: 'stegosauro',
     nome: 'Stegosauro',
-    foto: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=1000&q=80',
+    foto: 'https://images.unsplash.com/photo-1560114928-40f1f1eb26a0?auto=format&fit=crop&w=1000&q=80',
     habitat: 'dinosauri',
     statistiche: {
       peso: '4500 kg',
