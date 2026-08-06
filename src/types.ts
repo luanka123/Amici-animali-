@@ -25,6 +25,7 @@ export interface Animal {
   habitat: AnimalHabitat;
   statistiche: AnimalStats;
   fattoCurioso: string;
+  fattiCuriosi?: string[];
   indizi: [string, string, string]; // [generico, medio, specifico]
   packId?: string;
 }

@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { Animal, AnimalHabitat } from '../types';
-import { Search, Volume2, Sparkles, Filter, Info, ShieldAlert } from 'lucide-react';
+import { Search, Volume2, Sparkles, Filter, Info, ShieldAlert, RefreshCw } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { sound } from '../utils/audio';
+import { getRandomCuriosity } from '../utils/curiosities';
 
 interface EncyclopediaViewProps {
   animals: Animal[];
@@ -236,9 +237,24 @@ export const EncyclopediaView: React.FC<EncyclopediaViewProps> = ({ animals }) =
               </div>
 
               <div className="bg-stone-800/90 rounded-2xl p-5 border border-emerald-300/40 text-base font-bold text-stone-200 space-y-2">
-                <p className="font-black text-emerald-300 text-lg flex items-center gap-2">
-                  🌟 Curiosità Speciale:
-                </p>
+                <div className="flex items-center justify-between gap-2">
+                  <p className="font-black text-emerald-300 text-lg flex items-center gap-2">
+                    🌟 Curiosità Speciale:
+                  </p>
+                  <button
+                    onClick={() => {
+                      sound.playPop();
+                      const nextFact = getRandomCuriosity(activeAnimal.id, activeAnimal.fattoCurioso);
+                      setActiveAnimal({ ...activeAnimal, fattoCurioso: nextFact });
+                      sound.speak(`Altra curiosità: ${nextFact}`);
+                    }}
+                    className="flex items-center gap-1 px-3 py-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-black transition-all btn-active border border-emerald-400"
+                    title="Mostra un'altra curiosità per questo animale"
+                  >
+                    <RefreshCw className="w-3.5 h-3.5" />
+                    <span>Altra Curiosità</span>
+                  </button>
+                </div>
                 <p className="leading-relaxed">"{activeAnimal.fattoCurioso}"</p>
               </div>
 

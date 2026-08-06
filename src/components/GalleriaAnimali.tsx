@@ -2,8 +2,9 @@ import React, { useState } from 'react';
 import { Animal, AnimalHabitat } from '../types';
 import { HabitatBadge } from './HabitatBadge';
 import { StatCard } from './StatCard';
-import { Volume2, Sparkles, Filter, X, Lightbulb } from 'lucide-react';
+import { Volume2, Sparkles, Filter, X, Lightbulb, RefreshCw } from 'lucide-react';
 import { sound } from '../utils/audio';
+import { getRandomCuriosity } from '../utils/curiosities';
 
 interface GalleriaAnimaliProps {
   animals: Animal[];
@@ -206,8 +207,26 @@ export const GalleriaAnimali: React.FC<GalleriaAnimaliProps> = ({
             </div>
 
             {/* Fun Fact */}
-            <div className="p-3.5 bg-amber-100/80 border border-amber-200 rounded-2xl flex items-start gap-2.5">
-              <Lightbulb className="w-5 h-5 text-amber-700 flex-shrink-0 mt-0.5" />
+            <div className="p-3.5 bg-amber-100/80 border border-amber-200 rounded-2xl flex flex-col gap-2">
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-1.5 text-xs font-black text-amber-900 uppercase">
+                  <Lightbulb className="w-4 h-4 text-amber-700" />
+                  <span>Curiosità:</span>
+                </div>
+                <button
+                  onClick={() => {
+                    sound.playPop();
+                    const nextFact = getRandomCuriosity(activeModalAnimal.id, activeModalAnimal.fattoCurioso);
+                    setActiveModalAnimal({ ...activeModalAnimal, fattoCurioso: nextFact });
+                    sound.speak(`Altra curiosità: ${nextFact}`);
+                  }}
+                  className="flex items-center gap-1 px-2.5 py-1 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-xs font-black transition-all btn-active border border-amber-300"
+                  title="Cambia curiosità"
+                >
+                  <RefreshCw className="w-3 h-3" />
+                  <span>Nuova</span>
+                </button>
+              </div>
               <p className="text-sm font-extrabold text-amber-950 leading-snug">
                 "{activeModalAnimal.fattoCurioso}"
               </p>

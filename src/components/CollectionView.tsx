@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { Animal } from '../types';
-import { Lock, Sparkles, CheckCircle2, Trophy, Eye, Volume2 } from 'lucide-react';
+import { Lock, Sparkles, CheckCircle2, Trophy, Eye, Volume2, RefreshCw } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { sound } from '../utils/audio';
+import { getRandomCuriosity } from '../utils/curiosities';
 
 interface CollectionViewProps {
   animals: Animal[];
@@ -205,9 +206,24 @@ export const CollectionView: React.FC<CollectionViewProps> = ({
                 </div>
 
                 <div className="bg-stone-800/90 rounded-2xl p-5 border border-purple-300/40 text-left space-y-2 text-stone-200">
-                  <p className="text-base font-black text-purple-300 flex items-center gap-2">
-                    💡 <span>Curiosità:</span>
-                  </p>
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="text-base font-black text-purple-300 flex items-center gap-2">
+                      💡 <span>Curiosità:</span>
+                    </p>
+                    <button
+                      onClick={() => {
+                        sound.playPop();
+                        const nextFact = getRandomCuriosity(selectedAnimal.id, selectedAnimal.fattoCurioso);
+                        setSelectedAnimal({ ...selectedAnimal, fattoCurioso: nextFact });
+                        sound.speak(`Altra curiosità: ${nextFact}`);
+                      }}
+                      className="flex items-center gap-1 px-3 py-1 bg-purple-600 hover:bg-purple-500 text-white rounded-xl text-xs font-black transition-all btn-active border border-purple-400"
+                      title="Mostra un'altra curiosità"
+                    >
+                      <RefreshCw className="w-3.5 h-3.5" />
+                      <span>Altra Curiosità</span>
+                    </button>
+                  </div>
                   <p className="text-base font-medium leading-relaxed">
                     "{selectedAnimal.fattoCurioso}"
                   </p>

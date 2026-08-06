@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { Volume2, ChevronLeft, ChevronRight, Sparkles, Lightbulb, Camera, Info, Square } from 'lucide-react';
+import { Volume2, ChevronLeft, ChevronRight, Sparkles, Lightbulb, Camera, Info, Square, Shuffle } from 'lucide-react';
 import { Animal } from '../types';
 import { HabitatBadge } from './HabitatBadge';
 import { StatCard } from './StatCard';
 import { sound } from '../utils/audio';
+import { getRandomCuriosity } from '../utils/curiosities';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface CardScopriProps {
@@ -24,11 +25,23 @@ export const CardScopri: React.FC<CardScopriProps> = ({
   const [imageError, setImageError] = useState<boolean>(false);
 
   const currentAnimal = animals[currentIndex];
+  const [activeCuriosity, setActiveCuriosity] = useState<string>(currentAnimal?.fattoCurioso || '');
 
-  // Reset image error state when current animal changes
+  // Reset image error state & curiosity when current animal changes
   React.useEffect(() => {
     setImageError(false);
-  }, [currentIndex]);
+    if (currentAnimal) {
+      setActiveCuriosity(currentAnimal.fattoCurioso);
+    }
+  }, [currentIndex, currentAnimal]);
+
+  const handleNextCuriosity = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    sound.playPop();
+    const nextFact = getRandomCuriosity(currentAnimal.id, activeCuriosity);
+    setActiveCuriosity(nextFact);
+    sound.speak(`Altra curiosità: ${nextFact}`);
+  };
 
   // Automatically unlock animal when viewed
   React.useEffect(() => {
@@ -213,12 +226,22 @@ export const CardScopri: React.FC<CardScopriProps> = ({
 
               {/* Large Caption Banner below photo */}
               <div className="p-5 bg-gradient-to-r from-amber-100 via-orange-100 to-amber-100 border-2 border-amber-300 rounded-2xl shadow-sm space-y-2">
-                <div className="flex items-center gap-2 text-amber-950 font-black text-sm md:text-base uppercase tracking-wider">
-                  <Sparkles className="w-5 h-5 text-amber-600 fill-amber-500" />
-                  <span>Didascalia e Curiosità Principale:</span>
+                <div className="flex items-center justify-between gap-2 text-amber-950 font-black text-sm md:text-base uppercase tracking-wider">
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="w-5 h-5 text-amber-600 fill-amber-500" />
+                    <span>Didascalia e Curiosità:</span>
+                  </div>
+                  <button
+                    onClick={handleNextCuriosity}
+                    className="flex items-center gap-1.5 px-3 py-1 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-xs md:text-sm font-black shadow-sm transition-all btn-active shrink-0 border border-amber-300"
+                    title="Mostra un'altra curiosità casuale per questo animale"
+                  >
+                    <Shuffle className="w-3.5 h-3.5" />
+                    <span>Cambia Curiosità</span>
+                  </button>
                 </div>
                 <p className="text-base md:text-xl font-extrabold text-amber-950 leading-relaxed">
-                  "{currentAnimal.fattoCurioso}"
+                  "{activeCuriosity}"
                 </p>
               </div>
 
@@ -266,12 +289,22 @@ export const CardScopri: React.FC<CardScopriProps> = ({
 
               {/* Fun Fact Section */}
               <div className="p-5 bg-amber-100/90 border-2 border-amber-300 rounded-3xl space-y-2">
-                <div className="flex items-center gap-2 text-sm md:text-base font-black text-amber-950 uppercase tracking-wide">
-                  <Sparkles className="w-5 h-5 text-amber-600 fill-amber-500" />
-                  <span>Lo sapevi che...?</span>
+                <div className="flex items-center justify-between gap-2 text-sm md:text-base font-black text-amber-950 uppercase tracking-wide">
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="w-5 h-5 text-amber-600 fill-amber-500" />
+                    <span>Lo sapevi che...?</span>
+                  </div>
+                  <button
+                    onClick={handleNextCuriosity}
+                    className="flex items-center gap-1.5 px-3 py-1 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-xs md:text-sm font-black shadow-sm transition-all btn-active shrink-0 border border-amber-300"
+                    title="Mostra un'altra curiosità casuale"
+                  >
+                    <Shuffle className="w-3.5 h-3.5" />
+                    <span>Nuova Curiosità</span>
+                  </button>
                 </div>
                 <p className="text-base md:text-2xl font-black text-amber-950 leading-relaxed pt-1">
-                  "{currentAnimal.fattoCurioso}"
+                  "{activeCuriosity}"
                 </p>
               </div>
 

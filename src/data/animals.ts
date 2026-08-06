@@ -1,6 +1,7 @@
 import { Animal } from '../types';
+import { randomizeAnimalCuriosities } from '../utils/curiosities';
 
-export const ANIMALI_DATA: Animal[] = [
+const ANIMALI_RAW: Animal[] = [
   // SAVANA & TERRA
   {
     id: 'leone',
@@ -808,6 +809,9 @@ export const ANIMALI_DATA: Animal[] = [
     ],
   },
 ];
+
+// Ad ogni avvio/apertura dell'applicazione, le curiosità degli animali vengono variate casualmente!
+export const ANIMALI_DATA: Animal[] = randomizeAnimalCuriosities(ANIMALI_RAW);
 
 export const HABITAT_CONFIG = {
   savana: {

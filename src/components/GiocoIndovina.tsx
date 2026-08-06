@@ -208,7 +208,7 @@ export const GiocoIndovina: React.FC<GiocoIndovinaProps> = ({
     return () => clearInterval(interval);
   }, [gameState.currentRound, ageBand, gameState.guessedCorrectly]);
 
-  // Request AI Custom Clues from Express endpoint `/api/ai-quiz`
+  // Request Custom Clues from L'Oracolo della Natura via Express endpoint `/api/groq-quiz`
   const handleGenerateAiQuiz = async () => {
     sound.playPop();
     setAiLoading(true);
@@ -216,31 +216,33 @@ export const GiocoIndovina: React.FC<GiocoIndovinaProps> = ({
 
     try {
       const animalNames = activePool.map((a) => a.nome);
-      const res = await fetch('/api/ai-quiz', {
+      const res = await fetch('/api/groq-quiz', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ageBand,
           category: selectedCategory,
+          targetAnimal: targetAnimal.nome,
           animalNames,
         }),
       });
 
       const data = await res.json();
-      if (data.success && data.questions && data.questions.length > 0) {
-        const q = data.questions[0];
-        setAiCustomClue(q.indizi ? q.indizi.join('. ') : q.fattoGenerato);
+      if (data.success && data.data && data.data.indizi) {
+        const indiziList = data.data.indizi.join('. ');
+        setAiCustomClue(`🌿 [L'Oracolo della Natura - Età ${ageBand} Anni]: ${indiziList}`);
         sound.playWin();
-        sound.speak(`L'Intelligenza Artificiale ha creato un nuovo indizio per te!`);
+        sound.speak(`L'Oracolo della Natura ha rivelato un nuovo indizio riservato ai bambini di ${ageBand} anni!`);
       } else {
-        // Fallback local smart clue
         const fallbackText = getCluesForAge(targetAnimal, ageBand, 0);
-        setAiCustomClue(`🤖 [AI Smart Local]: ${fallbackText}`);
+        setAiCustomClue(`🌿 [L'Oracolo della Natura - Età ${ageBand} Anni]: ${fallbackText}`);
         sound.playPop();
+        sound.speak(`L'Oracolo della Natura dice: ${fallbackText}`);
       }
     } catch (err) {
-      console.warn('AI Quiz fetch error:', err);
-      setAiCustomClue(`🤖 Indizio Speciale: ${targetAnimal.fattoCurioso}`);
+      console.warn('Oracolo Quiz fetch error:', err);
+      const fallbackText = getCluesForAge(targetAnimal, ageBand, 0);
+      setAiCustomClue(`🌿 [L'Oracolo della Natura]: ${fallbackText}`);
     } finally {
       setAiLoading(false);
     }
@@ -460,15 +462,15 @@ export const GiocoIndovina: React.FC<GiocoIndovinaProps> = ({
             </div>
           </div>
 
-          {/* AI Generator Button */}
+          {/* Oracolo della Natura Button */}
           <button
             onClick={handleGenerateAiQuiz}
             disabled={aiLoading}
-            className="flex items-center gap-2 bg-white text-amber-950 hover:bg-amber-100 px-4 py-2 rounded-2xl font-black text-xs md:text-sm shadow-md transition-all btn-active border-2 border-yellow-300 shrink-0"
-            title="Genera un indizio inedito e personalizzato con l'Intelligenza Artificiale"
+            className="flex items-center gap-2 bg-gradient-to-r from-amber-100 to-yellow-200 text-amber-950 hover:bg-yellow-300 px-4 py-2 rounded-2xl font-black text-xs md:text-sm shadow-md transition-all btn-active border-2 border-amber-300 shrink-0"
+            title="Richiedi una rivelazione speciale a L'Oracolo della Natura"
           >
-            <Bot className={`w-5 h-5 text-purple-600 ${aiLoading ? 'animate-spin' : ''}`} />
-            <span>{aiLoading ? 'Generazione AI...' : '🤖 Indizio AI Groq/Gemini'}</span>
+            <Bot className={`w-5 h-5 text-amber-700 ${aiLoading ? 'animate-spin' : ''}`} />
+            <span>{aiLoading ? "L'Oracolo Medita..." : "✨ L'Oracolo della Natura"}</span>
           </button>
         </div>
 
