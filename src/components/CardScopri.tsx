@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Volume2, ChevronLeft, ChevronRight, Sparkles, Lightbulb, Camera, Info } from 'lucide-react';
+import { Volume2, ChevronLeft, ChevronRight, Sparkles, Lightbulb, Camera, Info, Square } from 'lucide-react';
 import { Animal } from '../types';
 import { HabitatBadge } from './HabitatBadge';
 import { StatCard } from './StatCard';
@@ -21,8 +21,14 @@ export const CardScopri: React.FC<CardScopriProps> = ({
 }) => {
   const [activeTab, setActiveTab] = useState<'foto' | 'dettagli'>('foto');
   const [isSpeaking, setIsSpeaking] = useState<boolean>(false);
+  const [imageError, setImageError] = useState<boolean>(false);
 
   const currentAnimal = animals[currentIndex];
+
+  // Reset image error state when current animal changes
+  React.useEffect(() => {
+    setImageError(false);
+  }, [currentIndex]);
 
   // Automatically unlock animal when viewed
   React.useEffect(() => {
@@ -46,11 +52,18 @@ export const CardScopri: React.FC<CardScopriProps> = ({
   const handleSpeak = (e: React.MouseEvent) => {
     e.stopPropagation();
     sound.playPop();
+
+    if (isSpeaking) {
+      sound.stopSpeech();
+      setIsSpeaking(false);
+      return;
+    }
+
     setIsSpeaking(true);
 
     let textToSpeak = '';
     if (activeTab === 'foto') {
-      textToSpeak = `${currentAnimal.nome}. Habitat: ${currentAnimal.habitat}.`;
+      textToSpeak = `${currentAnimal.nome}. Habitat: ${currentAnimal.habitat}. Lo sapevi che? ${currentAnimal.fattoCurioso}`;
     } else {
       textToSpeak = `${currentAnimal.nome}. Lo sapevi che? ${currentAnimal.fattoCurioso}. Peso: ${currentAnimal.statistiche.peso}. Velocità: ${currentAnimal.statistiche.velocita}.`;
     }
@@ -62,57 +75,76 @@ export const CardScopri: React.FC<CardScopriProps> = ({
     );
   };
 
+  const currentPhotoUrl = imageError
+    ? `https://images.unsplash.com/photo-1546182990-dffeafbe841d?auto=format&fit=crop&w=1200&q=80`
+    : currentAnimal.foto;
+
   return (
-    <div className="w-full max-w-2xl mx-auto flex flex-col items-center gap-5 px-4 py-2">
+    <div className="w-full max-w-5xl md:max-w-6xl mx-auto flex flex-col items-center gap-5 px-3 md:px-6 py-3">
       {/* Top Banner Guidance */}
-      <div className="flex items-center justify-between w-full frosted border border-amber-300/80 px-4 py-2.5 rounded-2xl shadow-xs">
-        <div className="flex items-center gap-2">
-          <span className="text-xl">🐾</span>
-          <p className="text-xs md:text-sm font-black text-amber-950">
-            1. Scopri le foto, il nome e le curiosità di ogni animale!
-          </p>
+      <div className="flex items-center justify-between w-full frosted border-2 border-amber-300 px-5 py-3 rounded-2xl shadow-sm">
+        <div className="flex items-center gap-3">
+          <span className="text-2xl md:text-3xl">🐾</span>
+          <div>
+            <h1 className="text-base md:text-xl font-black text-amber-950 font-display">
+              1. Scheda Grande Animale
+            </h1>
+            <p className="text-xs md:text-sm font-bold text-amber-900">
+              Osserva la foto ad alta risoluzione, ascolta il nome e scopri i suoi segreti!
+            </p>
+          </div>
         </div>
-        <div className="text-xs font-black text-amber-900 bg-amber-200/90 px-3 py-1 rounded-xl shadow-2xs">
+        <div className="text-sm md:text-base font-black text-amber-950 bg-amber-300/90 border border-amber-400 px-4 py-1.5 rounded-2xl shadow-2xs">
           {currentIndex + 1} / {animals.length}
         </div>
       </div>
 
-      {/* Main Interactive Animal Card */}
-      <div className="w-full frosted rounded-[32px] border-2 border-amber-300 shadow-lg overflow-hidden bg-white/90 p-5 space-y-4">
+      {/* Main Interactive Animal Card - ENLARGED FULL SCREEN WIDTH */}
+      <div className="w-full frosted rounded-[36px] border-4 border-amber-300 shadow-2xl overflow-hidden bg-white/95 p-4 md:p-6 space-y-5">
         {/* Card Header: Habitat & Speech Audio */}
         <div className="flex items-center justify-between">
           <HabitatBadge habitat={currentAnimal.habitat} size="lg" />
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
             <button
               onClick={handleSpeak}
-              className={`p-2.5 rounded-full shadow-md transition-all btn-active ${
+              className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl font-black text-sm md:text-base shadow-md transition-all btn-active ${
                 isSpeaking
-                  ? 'bg-amber-500 text-white animate-bounce'
-                  : 'bg-amber-100 hover:bg-amber-200 text-amber-900 border border-amber-300'
+                  ? 'bg-rose-500 text-white animate-pulse ring-4 ring-rose-300'
+                  : 'bg-amber-100 hover:bg-amber-200 text-amber-950 border-2 border-amber-300'
               }`}
-              title="Ascolta la pronuncia o la descrizione"
+              title={isSpeaking ? "Premi per interrompere la lettura vocale" : "Ascolta la descrizione dell'animale"}
             >
-              <Volume2 className="w-5 h-5" />
+              {isSpeaking ? (
+                <>
+                  <Square className="w-5 h-5 fill-white" />
+                  <span>Stop Voce 🛑</span>
+                </>
+              ) : (
+                <>
+                  <Volume2 className="w-6 h-6 text-amber-600" />
+                  <span>Ascolta Nome e Curiosità 🔊</span>
+                </>
+              )}
             </button>
           </div>
         </div>
 
-        {/* Tab Switcher: Foto vs Curiosità */}
-        <div className="flex bg-amber-100/80 p-1 rounded-2xl border border-amber-200/80 gap-1">
+        {/* Tab Switcher: Foto Grande vs Curiosità */}
+        <div className="flex bg-amber-100/90 p-1.5 rounded-2xl border-2 border-amber-300 gap-2">
           <button
             onClick={() => {
               sound.playPop();
               setActiveTab('foto');
             }}
-            className={`flex-1 py-2 rounded-xl font-extrabold text-xs md:text-sm transition-all flex items-center justify-center gap-2 btn-active ${
+            className={`flex-1 py-3 rounded-xl font-black text-sm md:text-base transition-all flex items-center justify-center gap-2 btn-active ${
               activeTab === 'foto'
-                ? 'bg-amber-500 text-white shadow-xs'
-                : 'text-amber-900 hover:bg-amber-200/60'
+                ? 'bg-amber-500 text-white shadow-md ring-2 ring-amber-300'
+                : 'text-amber-950 hover:bg-amber-200/80'
             }`}
           >
-            <Camera className="w-4 h-4" />
-            <span>Foto Grande</span>
+            <Camera className="w-5 h-5" />
+            <span>Foto Grande e Panoramica 📸</span>
           </button>
 
           <button
@@ -120,14 +152,14 @@ export const CardScopri: React.FC<CardScopriProps> = ({
               sound.playPop();
               setActiveTab('dettagli');
             }}
-            className={`flex-1 py-2 rounded-xl font-extrabold text-xs md:text-sm transition-all flex items-center justify-center gap-2 btn-active ${
+            className={`flex-1 py-3 rounded-xl font-black text-sm md:text-base transition-all flex items-center justify-center gap-2 btn-active ${
               activeTab === 'dettagli'
-                ? 'bg-amber-500 text-white shadow-xs'
-                : 'text-amber-900 hover:bg-amber-200/60'
+                ? 'bg-amber-500 text-white shadow-md ring-2 ring-amber-300'
+                : 'text-amber-950 hover:bg-amber-200/80'
             }`}
           >
-            <Lightbulb className="w-4 h-4" />
-            <span>Curiosità & Statistiche</span>
+            <Lightbulb className="w-5 h-5" />
+            <span>Curiosità e Scheda Tecnica 💡</span>
           </button>
         </div>
 
@@ -140,47 +172,66 @@ export const CardScopri: React.FC<CardScopriProps> = ({
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: 10 }}
               transition={{ duration: 0.2 }}
-              className="space-y-4"
+              className="space-y-5"
             >
-              {/* Large Animal Image */}
-              <div className="relative aspect-4/3 w-full rounded-2xl overflow-hidden border-2 border-amber-200 shadow-md bg-amber-50 group">
+              {/* LARGE HIGH-VISIBILITY ANIMAL IMAGE DISPLAY */}
+              <div className="relative w-full h-[380px] sm:h-[480px] md:h-[580px] lg:h-[620px] rounded-3xl overflow-hidden border-4 border-amber-300 shadow-xl bg-amber-950 group flex items-center justify-center">
                 <img
-                  src={currentAnimal.foto}
+                  src={currentPhotoUrl}
                   alt={currentAnimal.nome}
-                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                  onError={() => setImageError(true)}
+                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                   loading="eager"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none" />
+                
+                {/* Subtle Gradient Shadow for High Legibility Text Overlay */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent pointer-events-none" />
 
-                <div className="absolute bottom-4 left-4 right-4 text-white flex items-end justify-between">
-                  <div>
-                    <h2 className="text-3xl md:text-4xl font-black font-display tracking-wide drop-shadow-md">
+                {/* Overlaid Animal Title & Caption */}
+                <div className="absolute bottom-6 left-6 right-6 text-white flex flex-col md:flex-row md:items-end justify-between gap-4">
+                  <div className="space-y-1">
+                    <h2 className="text-4xl sm:text-5xl md:text-6xl font-black font-display tracking-wide text-white drop-shadow-xl">
                       {currentAnimal.nome}
                     </h2>
-                    <p className="text-xs font-bold text-amber-200/90 capitalize mt-0.5">
-                      Habitat: {currentAnimal.habitat}
+                    <p className="text-sm md:text-lg font-bold text-amber-200 capitalize drop-shadow-md flex items-center gap-2">
+                      <span>Habitat naturale:</span>
+                      <span className="bg-amber-500/90 text-white px-3 py-0.5 rounded-full text-xs md:text-sm font-black border border-amber-300">
+                        {currentAnimal.habitat}
+                      </span>
                     </p>
                   </div>
 
                   <button
                     onClick={handleSpeak}
-                    className="p-3 bg-amber-500 hover:bg-amber-600 text-white rounded-2xl shadow-lg transition-transform active:scale-95"
+                    className="self-start md:self-auto p-4 bg-amber-500 hover:bg-amber-600 text-white rounded-2xl shadow-2xl transition-transform active:scale-95 flex items-center gap-2 font-black text-base border-2 border-amber-300"
                   >
-                    <Volume2 className="w-5 h-5" />
+                    <Volume2 className="w-7 h-7" />
+                    <span className="md:hidden">Ascolta Nome</span>
                   </button>
                 </div>
               </div>
 
-              {/* Action Button to View Details */}
+              {/* Large Caption Banner below photo */}
+              <div className="p-5 bg-gradient-to-r from-amber-100 via-orange-100 to-amber-100 border-2 border-amber-300 rounded-2xl shadow-sm space-y-2">
+                <div className="flex items-center gap-2 text-amber-950 font-black text-sm md:text-base uppercase tracking-wider">
+                  <Sparkles className="w-5 h-5 text-amber-600 fill-amber-500" />
+                  <span>Didascalia e Curiosità Principale:</span>
+                </div>
+                <p className="text-base md:text-xl font-extrabold text-amber-950 leading-relaxed">
+                  "{currentAnimal.fattoCurioso}"
+                </p>
+              </div>
+
+              {/* Action Button to View Full Details */}
               <button
                 onClick={() => {
                   sound.playPop();
                   setActiveTab('dettagli');
                 }}
-                className="w-full py-3 bg-amber-100 hover:bg-amber-200 text-amber-950 font-black text-sm rounded-2xl border border-amber-300 transition-all flex items-center justify-center gap-2 btn-active shadow-2xs"
+                className="w-full py-4 bg-amber-500 hover:bg-amber-600 text-white font-black text-base md:text-lg rounded-2xl border-2 border-amber-600 transition-all flex items-center justify-center gap-2 btn-active shadow-md"
               >
-                <Lightbulb className="w-4 h-4 text-amber-600" />
-                <span>Scopri i segreti e le curiosità di {currentAnimal.nome}!</span>
+                <Lightbulb className="w-6 h-6 text-yellow-300" />
+                <span>Apri Scheda Dettagliata con Statistiche per {currentAnimal.nome}</span>
               </button>
             </motion.div>
           ) : (
@@ -190,38 +241,42 @@ export const CardScopri: React.FC<CardScopriProps> = ({
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -10 }}
               transition={{ duration: 0.2 }}
-              className="space-y-4"
+              className="space-y-5"
             >
-              {/* Header Banner with Animal Image so photo is ALWAYS visible */}
-              <div className="flex items-center gap-3 p-3 bg-amber-50 rounded-2xl border border-amber-200">
+              {/* Header Banner with Animal Image so photo is ALWAYS visible in large format */}
+              <div className="flex flex-col sm:flex-row items-center gap-4 p-4 bg-amber-50 rounded-3xl border-2 border-amber-300">
                 <img
-                  src={currentAnimal.foto}
+                  src={currentPhotoUrl}
                   alt={currentAnimal.nome}
-                  className="w-20 h-20 rounded-xl object-cover border-2 border-amber-300 shadow-sm shrink-0"
+                  onError={() => setImageError(true)}
+                  className="w-32 h-32 sm:w-40 sm:h-40 rounded-2xl object-cover border-4 border-amber-300 shadow-md shrink-0"
                 />
-                <div className="flex-1 min-w-0">
-                  <h3 className="text-2xl font-black font-display text-amber-950 truncate">
+                <div className="flex-1 text-center sm:text-left space-y-2">
+                  <h3 className="text-3xl sm:text-4xl font-black font-display text-amber-950">
                     {currentAnimal.nome}
                   </h3>
-                  <p className="text-xs font-bold text-amber-800/80">
-                    Scheda Informativa per Piccoli Esploratori
+                  <p className="text-sm md:text-base font-bold text-amber-900">
+                    Scheda Esploratore Approfondita
                   </p>
+                  <div className="flex items-center justify-center sm:justify-start gap-2 pt-1">
+                    <HabitatBadge habitat={currentAnimal.habitat} size="md" />
+                  </div>
                 </div>
               </div>
 
               {/* Fun Fact Section */}
-              <div className="p-4 bg-amber-100/80 border border-amber-300/80 rounded-2xl space-y-1">
-                <div className="flex items-center gap-2 text-xs font-black text-amber-950 uppercase tracking-wide">
-                  <Sparkles className="w-4 h-4 text-amber-600 fill-amber-500" />
+              <div className="p-5 bg-amber-100/90 border-2 border-amber-300 rounded-3xl space-y-2">
+                <div className="flex items-center gap-2 text-sm md:text-base font-black text-amber-950 uppercase tracking-wide">
+                  <Sparkles className="w-5 h-5 text-amber-600 fill-amber-500" />
                   <span>Lo sapevi che...?</span>
                 </div>
-                <p className="text-sm md:text-base font-bold text-amber-950 leading-relaxed pt-1">
+                <p className="text-base md:text-2xl font-black text-amber-950 leading-relaxed pt-1">
                   "{currentAnimal.fattoCurioso}"
                 </p>
               </div>
 
-              {/* Stat Cards Grid */}
-              <div className="grid grid-cols-2 gap-2.5">
+              {/* Stat Cards Grid - Larger & Spaced */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <StatCard tipo="peso" valore={currentAnimal.statistiche.peso} />
                 <StatCard tipo="velocita" valore={currentAnimal.statistiche.velocita} />
                 <StatCard tipo="lunghezza" valore={currentAnimal.statistiche.lunghezza} />
@@ -234,10 +289,10 @@ export const CardScopri: React.FC<CardScopriProps> = ({
                   sound.playPop();
                   setActiveTab('foto');
                 }}
-                className="w-full py-2.5 bg-stone-100 hover:bg-amber-100 text-stone-800 font-extrabold text-xs rounded-xl border border-stone-300 transition-all flex items-center justify-center gap-2 btn-active"
+                className="w-full py-3.5 bg-stone-100 hover:bg-amber-100 text-amber-950 font-black text-sm md:text-base rounded-2xl border-2 border-stone-300 transition-all flex items-center justify-center gap-2 btn-active shadow-sm"
               >
-                <Camera className="w-4 h-4 text-amber-600" />
-                <span>Ritorna alla Foto Grande</span>
+                <Camera className="w-5 h-5 text-amber-600" />
+                <span>Ritorna alla Foto Panoramica a Schermo Intero</span>
               </button>
             </motion.div>
           )}
@@ -245,26 +300,26 @@ export const CardScopri: React.FC<CardScopriProps> = ({
       </div>
 
       {/* Bottom Navigation Controls */}
-      <div className="flex items-center justify-between w-full gap-3 pt-1">
+      <div className="flex items-center justify-between w-full gap-4 pt-1">
         <button
           onClick={handlePrev}
-          className="flex-1 flex items-center justify-center gap-2 bg-white text-amber-950 border-2 border-amber-200 hover:border-amber-400 font-black py-3 px-4 rounded-2xl shadow-xs transition-all btn-active"
+          className="flex-1 flex items-center justify-center gap-2 bg-white text-amber-950 border-3 border-amber-300 hover:border-amber-500 font-black py-4 px-6 rounded-2xl shadow-md transition-all btn-active text-base md:text-lg"
         >
-          <ChevronLeft className="w-5 h-5 text-amber-600" />
+          <ChevronLeft className="w-6 h-6 text-amber-600" />
           <span>Precedente</span>
         </button>
 
         <button
           onClick={handleNext}
-          className="flex-2 flex items-center justify-center gap-2 bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 text-white font-black py-3 px-6 rounded-2xl shadow-md transition-all btn-active"
+          className="flex-2 flex items-center justify-center gap-2 bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 text-white font-black py-4 px-8 rounded-2xl shadow-xl hover:brightness-105 transition-all btn-active text-base md:text-xl"
         >
           <span>Prossimo Animale</span>
-          <ChevronRight className="w-5 h-5" />
+          <ChevronRight className="w-6 h-6" />
         </button>
       </div>
 
-      {/* Quick Jump Thumbnail Bar */}
-      <div className="w-full frosted p-2.5 rounded-2xl border border-amber-200/80 shadow-2xs flex items-center justify-between gap-1 overflow-x-auto no-scrollbar">
+      {/* Quick Jump Thumbnail Bar - Bigger Thumbnails */}
+      <div className="w-full frosted p-3 rounded-2xl border-2 border-amber-300/80 shadow-md flex items-center justify-start gap-2.5 overflow-x-auto no-scrollbar">
         {animals.map((a, idx) => (
           <button
             key={a.id}
@@ -273,14 +328,14 @@ export const CardScopri: React.FC<CardScopriProps> = ({
               setActiveTab('foto');
               onIndexChange(idx);
             }}
-            className={`flex-shrink-0 relative rounded-xl overflow-hidden border-2 transition-all p-0.5 btn-active ${
+            className={`flex-shrink-0 relative rounded-2xl overflow-hidden border-3 transition-all p-0.5 btn-active ${
               idx === currentIndex
-                ? 'border-amber-500 ring-2 ring-amber-300 shadow-md scale-105'
-                : 'border-transparent opacity-60 hover:opacity-100'
+                ? 'border-amber-500 ring-4 ring-amber-300 shadow-lg scale-110'
+                : 'border-transparent opacity-70 hover:opacity-100'
             }`}
             title={a.nome}
           >
-            <img src={a.foto} alt={a.nome} className="w-10 h-10 object-cover rounded-lg" />
+            <img src={a.foto} alt={a.nome} className="w-14 h-14 md:w-16 md:h-16 object-cover rounded-xl" />
           </button>
         ))}
       </div>

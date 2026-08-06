@@ -1,5 +1,5 @@
 import React from 'react';
-import { Volume2, VolumeX, Sparkles, Compass, HelpCircle, BookOpen, Trophy, Award, Zap, Mic, MicOff } from 'lucide-react';
+import { Volume2, VolumeX, Sparkles, Compass, HelpCircle, BookOpen, Trophy, Award, Zap, Mic, MicOff, Swords, PackageCheck, Square } from 'lucide-react';
 import { AppMode } from '../types';
 import { sound } from '../utils/audio';
 
@@ -12,6 +12,8 @@ interface HeaderProps {
   setIsSpeechEnabled: (enabled: boolean) => void;
   score?: number;
   unlockedCount?: number;
+  totalAnimalCount?: number;
+  onOpenPacksModal: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -23,6 +25,8 @@ export const Header: React.FC<HeaderProps> = ({
   setIsSpeechEnabled,
   score = 0,
   unlockedCount = 0,
+  totalAnimalCount = 8,
+  onOpenPacksModal,
 }) => {
   const toggleSound = () => {
     const newMuted = !isMuted;
@@ -49,7 +53,7 @@ export const Header: React.FC<HeaderProps> = ({
   };
 
   return (
-    <header className="sticky top-0 z-50 bg-[#FAF6ED]/85 backdrop-blur-md border-b border-amber-200/50 shadow-sm px-3 py-2.5">
+    <header className="sticky top-0 z-50 bg-[#FAF6ED]/90 backdrop-blur-md border-b border-amber-200/50 shadow-sm px-3 py-2">
       <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-2.5">
         {/* Brand Logo & Title */}
         <div className="flex items-center gap-2.5 cursor-pointer" onClick={() => handleModeChange('scopri')}>
@@ -77,7 +81,7 @@ export const Header: React.FC<HeaderProps> = ({
             }`}
           >
             <Compass className="w-3.5 h-3.5" />
-            <span>Scopri</span>
+            <span>1. Scopri</span>
           </button>
 
           <button
@@ -89,19 +93,19 @@ export const Header: React.FC<HeaderProps> = ({
             }`}
           >
             <HelpCircle className="w-3.5 h-3.5" />
-            <span>Indovina</span>
+            <span>2. Indovina</span>
           </button>
 
           <button
             onClick={() => handleModeChange('sfida')}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-extrabold text-xs transition-all duration-200 whitespace-nowrap btn-active ${
               mode === 'sfida'
-                ? 'bg-orange-600 text-white shadow-sm'
+                ? 'bg-gradient-to-r from-orange-500 to-amber-600 text-white shadow-sm ring-1 ring-amber-300'
                 : 'text-amber-900 hover:bg-amber-100/60'
             }`}
           >
-            <Zap className="w-3.5 h-3.5 fill-current" />
-            <span>Sfida Flash</span>
+            <Swords className="w-3.5 h-3.5" />
+            <span>3. Sfida Top Trumps ⚔️</span>
           </button>
 
           <button
@@ -125,7 +129,7 @@ export const Header: React.FC<HeaderProps> = ({
             }`}
           >
             <Trophy className="w-3.5 h-3.5" />
-            <span>Album ({unlockedCount}/8)</span>
+            <span>Album ({unlockedCount}/{totalAnimalCount})</span>
           </button>
 
           <button
@@ -141,8 +145,33 @@ export const Header: React.FC<HeaderProps> = ({
           </button>
         </nav>
 
-        {/* Audio Controls & Total Score */}
+        {/* Audio Controls & Pack Selector */}
         <div className="flex items-center gap-2">
+          {/* Pack Selector Modal Trigger */}
+          <button
+            onClick={() => {
+              sound.playPop();
+              onOpenPacksModal();
+            }}
+            className="flex items-center gap-1.5 bg-amber-100/90 hover:bg-amber-200 text-amber-950 border border-amber-300 px-3 py-1.5 rounded-xl text-xs font-black shadow-2xs transition-all btn-active"
+            title="Scegli i Pacchetti Animali"
+          >
+            <PackageCheck className="w-4 h-4 text-amber-700" />
+            <span className="hidden sm:inline">Pacchetti</span>
+          </button>
+
+          <button
+            onClick={() => {
+              sound.playPop();
+              sound.stopSpeech();
+            }}
+            className="flex items-center gap-1.5 bg-rose-500 hover:bg-rose-600 text-white border border-rose-600 px-3 py-1.5 rounded-xl text-xs font-black shadow-md transition-all btn-active"
+            title="Interrompi immediatamente la lettura vocale in corso"
+          >
+            <Square className="w-3.5 h-3.5 fill-white" />
+            <span>Stop Voce 🛑</span>
+          </button>
+
           <button
             onClick={toggleSpeech}
             className={`p-2 rounded-xl border transition-all btn-active ${
@@ -168,8 +197,8 @@ export const Header: React.FC<HeaderProps> = ({
           </button>
 
           {score > 0 && (
-            <div className="flex items-center gap-1 bg-amber-100 text-amber-950 border border-amber-300 px-2.5 py-1 rounded-xl text-xs font-black font-display shadow-2xs">
-              <Sparkles className="w-3.5 h-3.5 text-amber-600 fill-amber-500" />
+            <div className="flex items-center gap-1 bg-amber-500 text-white border border-amber-600 px-2.5 py-1 rounded-xl text-xs font-black font-display shadow-2xs">
+              <Sparkles className="w-3.5 h-3.5 text-yellow-300 fill-yellow-200" />
               <span>{score} PT</span>
             </div>
           )}
@@ -178,4 +207,5 @@ export const Header: React.FC<HeaderProps> = ({
     </header>
   );
 };
+
 

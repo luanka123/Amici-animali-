@@ -1,4 +1,8 @@
-export type AnimalHabitat = 'savana' | 'oceano' | 'foresta';
+export type AnimalHabitat = 'savana' | 'oceano' | 'foresta' | 'giungla' | 'dinosauri';
+
+export type AgeBand = '3-4' | '5-6' | '7-8' | '9-12+';
+
+export type StatCategory = 'pesoNum' | 'velocitaNum' | 'lunghezzaNum' | 'longevitaNum';
 
 export interface AnimalStats {
   peso: string;       // e.g. "190 kg"
@@ -22,9 +26,30 @@ export interface Animal {
   statistiche: AnimalStats;
   fattoCurioso: string;
   indizi: [string, string, string]; // [generico, medio, specifico]
+  packId?: string;
+}
+
+export interface AnimalPack {
+  id: string;
+  titolo: string;
+  descrizione: string;
+  icona: string;
+  habitatPrevalente: AnimalHabitat;
+  gratuito: boolean;
+  unlocked: boolean;
+  prezzoSimulato: string;
+  animali: Animal[];
 }
 
 export type AppMode = 'scopri' | 'indovina' | 'sfida' | 'enciclopedia' | 'collezione' | 'obiettivi';
+
+export interface ConfrontoRound {
+  playerAnimal: Animal;
+  opponentAnimal: Animal;
+  selectedStat: StatCategory | null;
+  winner: 'player' | 'opponent' | 'tie' | null;
+  pointsWon: number;
+}
 
 export interface GameState {
   currentRound: number; // 0 to 7 (8 animals)

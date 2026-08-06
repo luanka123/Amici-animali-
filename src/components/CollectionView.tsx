@@ -82,27 +82,30 @@ export const CollectionView: React.FC<CollectionViewProps> = ({
       </div>
 
       {/* Grid of Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-5">
         {animals.map((animal) => {
           const isUnlocked = unlockedAnimalIds.includes(animal.id);
 
           return (
             <motion.div
               key={animal.id}
-              whileHover={{ y: isUnlocked ? -4 : 0 }}
+              whileHover={{ y: isUnlocked ? -6 : 0 }}
               whileTap={{ scale: 0.97 }}
               onClick={() => handleCardClick(animal)}
-              className={`relative rounded-3xl overflow-hidden border transition-all duration-300 cursor-pointer ${
+              className={`relative rounded-3xl overflow-hidden border-2 transition-all duration-300 cursor-pointer ${
                 isUnlocked
-                  ? 'bg-white/80 border-purple-200/80 shadow-sm hover:shadow-md'
-                  : 'bg-stone-200/60 border-stone-300/80 grayscale opacity-80'
+                  ? 'bg-white/90 border-purple-300 shadow-md hover:shadow-xl'
+                  : 'bg-stone-200/80 border-stone-300 grayscale opacity-85'
               }`}
             >
               {/* Card Thumbnail Container */}
-              <div className="relative aspect-4/3 overflow-hidden bg-stone-100">
+              <div className="relative h-44 sm:h-52 overflow-hidden bg-stone-100">
                 <img
                   src={animal.foto}
                   alt={animal.nome}
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1546182990-dffeafbe841d?auto=format&fit=crop&w=800&q=80';
+                  }}
                   className={`w-full h-full object-cover transition-transform duration-500 ${
                     isUnlocked ? 'hover:scale-105' : 'blur-xs scale-105'
                   }`}
@@ -110,13 +113,13 @@ export const CollectionView: React.FC<CollectionViewProps> = ({
 
                 {/* Overlay Badge for Locked or Unlocked */}
                 {isUnlocked ? (
-                  <div className="absolute top-2 right-2 bg-emerald-500 text-white p-1 rounded-full shadow-xs">
-                    <CheckCircle2 className="w-4 h-4" />
+                  <div className="absolute top-2.5 right-2.5 bg-emerald-500 text-white p-1.5 rounded-full shadow-md">
+                    <CheckCircle2 className="w-5 h-5" />
                   </div>
                 ) : (
-                  <div className="absolute inset-0 bg-stone-900/40 backdrop-blur-[2px] flex flex-col items-center justify-center text-white gap-1">
-                    <Lock className="w-7 h-7 text-amber-300 drop-shadow-md animate-bounce" />
-                    <span className="text-[11px] font-black uppercase tracking-wider bg-stone-900/70 px-2 py-0.5 rounded-md">
+                  <div className="absolute inset-0 bg-stone-900/50 backdrop-blur-[2px] flex flex-col items-center justify-center text-white gap-2">
+                    <Lock className="w-8 h-8 text-amber-300 drop-shadow-lg animate-bounce" />
+                    <span className="text-xs font-black uppercase tracking-wider bg-stone-900/80 px-2.5 py-1 rounded-md border border-stone-700">
                       Bloccato
                     </span>
                   </div>
@@ -125,20 +128,20 @@ export const CollectionView: React.FC<CollectionViewProps> = ({
 
               {/* Card Footer */}
               <div className="p-3 text-center">
-                <h3 className="font-extrabold font-display text-stone-900 text-base leading-tight">
+                <h3 className="font-black font-display text-stone-900 text-lg leading-tight">
                   {isUnlocked ? animal.nome : '???'}
                 </h3>
 
                 {isUnlocked ? (
                   <span
-                    className={`inline-block mt-1 text-[10px] font-black uppercase px-2 py-0.5 rounded-full border ${getHabitatBadgeColor(
+                    className={`inline-block mt-1 text-xs font-black uppercase px-2.5 py-0.5 rounded-full border ${getHabitatBadgeColor(
                       animal.habitat
                     )}`}
                   >
                     {animal.habitat}
                   </span>
                 ) : (
-                  <p className="text-[11px] font-semibold text-stone-500 mt-0.5">
+                  <p className="text-xs font-bold text-stone-600 mt-1">
                     Trovalo nel gioco!
                   </p>
                 )}
@@ -155,7 +158,7 @@ export const CollectionView: React.FC<CollectionViewProps> = ({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-stone-900/60 backdrop-blur-md flex items-center justify-center p-4"
+            className="fixed inset-0 z-50 bg-stone-900/70 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto"
             onClick={() => setSelectedAnimal(null)}
           >
             <motion.div
@@ -163,69 +166,72 @@ export const CollectionView: React.FC<CollectionViewProps> = ({
               animate={{ scale: 1, y: 0 }}
               exit={{ scale: 0.9, y: 20 }}
               onClick={(e) => e.stopPropagation()}
-              className="frosted-dark rounded-[36px] max-w-lg w-full overflow-hidden p-6 shadow-2xl border border-amber-300/40 relative"
+              className="frosted-dark rounded-[40px] max-w-2xl w-full overflow-hidden p-6 md:p-8 shadow-2xl border-2 border-purple-300/60 relative bg-stone-900/90 text-white"
             >
               <button
                 onClick={() => setSelectedAnimal(null)}
-                className="absolute top-4 right-4 bg-stone-200/80 hover:bg-stone-300 text-stone-700 w-8 h-8 rounded-full font-bold flex items-center justify-center transition-colors"
+                className="absolute top-5 right-5 bg-stone-200/90 hover:bg-white text-stone-900 w-10 h-10 rounded-full font-black text-lg flex items-center justify-center transition-colors shadow-md z-20"
               >
                 ✕
               </button>
 
-              <div className="text-center space-y-4">
-                <div className="relative rounded-2xl overflow-hidden aspect-16/10 border-2 border-amber-200 shadow-md">
+              <div className="text-center space-y-5">
+                <div className="relative rounded-3xl overflow-hidden h-64 sm:h-80 md:h-96 border-2 border-purple-300/50 shadow-2xl bg-black">
                   <img
                     src={selectedAnimal.foto}
                     alt={selectedAnimal.nome}
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1546182990-dffeafbe841d?auto=format&fit=crop&w=1000&q=80';
+                    }}
                     className="w-full h-full object-cover"
                   />
-                  <div className="absolute top-3 left-3 bg-emerald-500 text-white text-xs font-black px-3 py-1 rounded-full flex items-center gap-1 shadow-sm">
-                    <Sparkles className="w-3.5 h-3.5" />
+                  <div className="absolute top-4 left-4 bg-emerald-500 text-white text-xs md:text-sm font-black px-4 py-1.5 rounded-full flex items-center gap-1.5 shadow-md">
+                    <Sparkles className="w-4 h-4" />
                     <span>Collezione Sbloccata</span>
                   </div>
                 </div>
 
-                <div className="flex items-center justify-center gap-2">
-                  <h3 className="text-3xl font-black font-display text-amber-950">
+                <div className="flex items-center justify-center gap-3">
+                  <h3 className="text-3xl sm:text-4xl font-black font-display text-purple-200">
                     {selectedAnimal.nome}
                   </h3>
                   <button
                     onClick={() => sound.speak(selectedAnimal.nome)}
-                    className="p-2 bg-amber-200 hover:bg-amber-300 text-amber-900 rounded-full transition-colors"
+                    className="p-3 bg-purple-500 hover:bg-purple-400 text-white rounded-full transition-colors shadow-md"
                     title="Ascolta nome"
                   >
-                    <Volume2 className="w-5 h-5" />
+                    <Volume2 className="w-6 h-6" />
                   </button>
                 </div>
 
-                <div className="bg-amber-50/80 rounded-2xl p-4 border border-amber-200 text-left space-y-2 text-stone-800">
-                  <p className="text-sm font-bold text-amber-900 flex items-center gap-1.5">
-                    💡 <span className="underline decoration-amber-300">Curiosità:</span>
+                <div className="bg-stone-800/90 rounded-2xl p-5 border border-purple-300/40 text-left space-y-2 text-stone-200">
+                  <p className="text-base font-black text-purple-300 flex items-center gap-2">
+                    💡 <span>Curiosità:</span>
                   </p>
-                  <p className="text-sm font-medium leading-relaxed">
-                    {selectedAnimal.fattoCurioso}
+                  <p className="text-base font-medium leading-relaxed">
+                    "{selectedAnimal.fattoCurioso}"
                   </p>
                 </div>
 
                 {/* Stats grid */}
-                <div className="grid grid-cols-2 gap-2 text-xs font-bold text-stone-700">
-                  <div className="bg-white/80 p-2.5 rounded-xl border border-amber-200">
-                    🏋️ Peso: <span className="text-amber-900 font-extrabold">{selectedAnimal.statistiche.peso}</span>
+                <div className="grid grid-cols-2 gap-3 text-sm font-bold text-stone-200">
+                  <div className="bg-stone-800/80 p-3 rounded-2xl border border-purple-300/30">
+                    🏋️ Peso: <span className="text-purple-300 font-black">{selectedAnimal.statistiche.peso}</span>
                   </div>
-                  <div className="bg-white/80 p-2.5 rounded-xl border border-amber-200">
-                    ⚡ Velocità: <span className="text-amber-900 font-extrabold">{selectedAnimal.statistiche.velocita}</span>
+                  <div className="bg-stone-800/80 p-3 rounded-2xl border border-purple-300/30">
+                    ⚡ Velocità: <span className="text-purple-300 font-black">{selectedAnimal.statistiche.velocita}</span>
                   </div>
-                  <div className="bg-white/80 p-2.5 rounded-xl border border-amber-200">
-                    📏 Lunghezza: <span className="text-amber-900 font-extrabold">{selectedAnimal.statistiche.lunghezza}</span>
+                  <div className="bg-stone-800/80 p-3 rounded-2xl border border-purple-300/30">
+                    📏 Lunghezza: <span className="text-purple-300 font-black">{selectedAnimal.statistiche.lunghezza}</span>
                   </div>
-                  <div className="bg-white/80 p-2.5 rounded-xl border border-amber-200">
-                    🎂 Longevità: <span className="text-amber-900 font-extrabold">{selectedAnimal.statistiche.longevita}</span>
+                  <div className="bg-stone-800/80 p-3 rounded-2xl border border-purple-300/30">
+                    🎂 Longevità: <span className="text-purple-300 font-black">{selectedAnimal.statistiche.longevita}</span>
                   </div>
                 </div>
 
                 <button
                   onClick={() => setSelectedAnimal(null)}
-                  className="w-full py-3 bg-amber-500 hover:bg-amber-600 text-white font-black rounded-2xl transition-colors font-display shadow-md btn-active"
+                  className="w-full py-4 bg-purple-600 hover:bg-purple-500 text-white font-black rounded-2xl transition-colors font-display shadow-xl text-base btn-active"
                 >
                   Chiudi Scheda
                 </button>

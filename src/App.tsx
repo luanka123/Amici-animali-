@@ -1,17 +1,19 @@
-import React, { useState, useEffect } from 'react';
-import { AppMode, Achievement } from './types';
-import { ANIMALI_DATA } from './data/animals';
+import React, { useState, useEffect, useMemo } from 'react';
+import { AppMode, Achievement, AnimalPack, Animal } from './types';
+import { INITIAL_PACKS } from './data/packs';
 import { INITIAL_ACHIEVEMENTS } from './data/achievements';
 import { Header } from './components/Header';
 import { CardScopri } from './components/CardScopri';
 import { GiocoIndovina } from './components/GiocoIndovina';
-import { ChallengeView } from './components/ChallengeView';
+import { ConfrontoView } from './components/ConfrontoView';
 import { EncyclopediaView } from './components/EncyclopediaView';
 import { CollectionView } from './components/CollectionView';
 import { AchievementsView } from './components/AchievementsView';
+import { PackSelectorModal } from './components/PackSelectorModal';
 import { Footer } from './components/Footer';
 import { sound } from './utils/audio';
-import { Award, Sparkles } from 'lucide-react';
+import { getAnimalPhoto } from './services/pexels';
+import { Sparkles } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function App() {
@@ -20,12 +22,36 @@ export default function App() {
   const [gameScore, setGameScore] = useState<number>(0);
   const [isMuted, setIsMuted] = useState<boolean>(false);
   const [isSpeechEnabled, setIsSpeechEnabled] = useState<boolean>(true);
+  const [isPacksModalOpen, setIsPacksModalOpen] = useState<boolean>(false);
 
-  // User persistent progress
+  // Packs State
+  const [packs, setPacks] = useState<AnimalPack[]>(() => {
+    try {
+      const savedUnlocked = localStorage.getItem('amici_animali_unlocked_packs');
+      const unlockedIds: string[] = savedUnlocked ? JSON.parse(savedUnlocked) : ['pack_mix'];
+      return INITIAL_PACKS.map(p => ({
+        ...p,
+        unlocked: p.gratuito || unlockedIds.includes(p.id),
+      }));
+    } catch {
+      return INITIAL_PACKS;
+    }
+  });
+
+  const [activePackIds, setActivePackIds] = useState<string[]>(() => {
+    try {
+      const savedActive = localStorage.getItem('amici_animali_active_packs');
+      return savedActive ? JSON.parse(savedActive) : ['pack_mix'];
+    } catch {
+      return ['pack_mix'];
+    }
+  });
+
+  // User persistent unlocked animals progress
   const [unlockedAnimalIds, setUnlockedAnimalIds] = useState<string[]>(() => {
     try {
       const saved = localStorage.getItem('amici_animali_unlocked');
-      return saved ? JSON.parse(saved) : ['leone']; // default 1 unlocked animal to start
+      return saved ? JSON.parse(saved) : ['leone'];
     } catch {
       return ['leone'];
     }
@@ -42,6 +68,52 @@ export default function App() {
 
   const [toastMessage, setToastMessage] = useState<{ title: string; desc: string; icon: string } | null>(null);
 
+  // Active combined animals from currently enabled packs
+  const rawAnimals = useMemo(() => {
+    const combined: Animal[] = [];
+    packs.forEach(pack => {
+      if (pack.unlocked && activePackIds.includes(pack.id)) {
+        combined.push(...pack.animali);
+      }
+    });
+
+    // Fallback if no active pack is selected
+    if (combined.length === 0) {
+      return packs[0].animali;
+    }
+    return combined;
+  }, [packs, activePackIds]);
+
+  // Enhanced animals state with Pexels photos loaded via cache/API
+  const [animalsWithPexels, setAnimalsWithPexels] = useState<Animal[]>(rawAnimals);
+
+  // Load real Pexels photos in background with caching
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadPexelsPhotos() {
+      const updatedList = await Promise.all(
+        rawAnimals.map(async (animal) => {
+          const photoUrl = await getAnimalPhoto(animal.nome, animal.foto);
+          return {
+            ...animal,
+            foto: photoUrl,
+          };
+        })
+      );
+
+      if (isMounted) {
+        setAnimalsWithPexels(updatedList);
+      }
+    }
+
+    loadPexelsPhotos();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [rawAnimals]);
+
   // Save progress to LocalStorage
   useEffect(() => {
     localStorage.setItem('amici_animali_unlocked', JSON.stringify(unlockedAnimalIds));
@@ -51,15 +123,20 @@ export default function App() {
     localStorage.setItem('amici_animali_achievements', JSON.stringify(achievements));
   }, [achievements]);
 
+  useEffect(() => {
+    const unlockedIds = packs.filter(p => p.unlocked).map(p => p.id);
+    localStorage.setItem('amici_animali_unlocked_packs', JSON.stringify(unlockedIds));
+  }, [packs]);
+
+  useEffect(() => {
+    localStorage.setItem('amici_animali_active_packs', JSON.stringify(activePackIds));
+  }, [activePackIds]);
+
   // Check and update achievements whenever unlockedAnimalIds changes
   useEffect(() => {
-    const savanaIds = ['leone', 'elefante', 'giraffa'];
-    const oceanoIds = ['delfino', 'pellicano'];
-    const forestaIds = ['panda-gigante', 'gufo', 'tigre'];
-
-    const countSavana = savanaIds.filter((id) => unlockedAnimalIds.includes(id)).length;
-    const countOceano = oceanoIds.filter((id) => unlockedAnimalIds.includes(id)).length;
-    const countForesta = forestaIds.filter((id) => unlockedAnimalIds.includes(id)).length;
+    const countSavana = ['leone', 'elefante', 'giraffa'].filter((id) => unlockedAnimalIds.includes(id)).length;
+    const countOceano = ['delfino', 'pellicano'].filter((id) => unlockedAnimalIds.includes(id)).length;
+    const countForesta = ['panda-gigante', 'gufo', 'tigre'].filter((id) => unlockedAnimalIds.includes(id)).length;
 
     updateAchievement('primo_scopritore', unlockedAnimalIds.length >= 1 ? 1 : 0);
     updateAchievement('re_savana', countSavana);
@@ -100,10 +177,6 @@ export default function App() {
   const unlockAnimal = (animalId: string) => {
     if (!unlockedAnimalIds.includes(animalId)) {
       setUnlockedAnimalIds((prev) => [...prev, animalId]);
-      const animal = ANIMALI_DATA.find((a) => a.id === animalId);
-      if (animal) {
-        sound.playPop();
-      }
     }
   };
 
@@ -123,8 +196,26 @@ export default function App() {
   const handleSelectAnimalForScopri = (index: number) => {
     setScopriIndex(index);
     setMode('scopri');
-    const animal = ANIMALI_DATA[index];
+    const animal = animalsWithPexels[index];
     if (animal) unlockAnimal(animal.id);
+  };
+
+  const handleToggleActivePack = (packId: string) => {
+    if (activePackIds.includes(packId)) {
+      if (activePackIds.length > 1) {
+        setActivePackIds(prev => prev.filter(id => id !== packId));
+      }
+    } else {
+      setActivePackIds(prev => [...prev, packId]);
+    }
+  };
+
+  const handleUnlockPack = (packId: string) => {
+    setPacks(prev => prev.map(p => p.id === packId ? { ...p, unlocked: true } : p));
+    if (!activePackIds.includes(packId)) {
+      setActivePackIds(prev => [...prev, packId]);
+    }
+    triggerToast('Nuovo Pacchetto Sbloccato! 🎁', 'Ora hai accesso a nuovi fantastici animali!', '🦁');
   };
 
   return (
@@ -164,13 +255,15 @@ export default function App() {
         setIsSpeechEnabled={setIsSpeechEnabled}
         score={gameScore}
         unlockedCount={unlockedAnimalIds.length}
+        totalAnimalCount={animalsWithPexels.length}
+        onOpenPacksModal={() => setIsPacksModalOpen(true)}
       />
 
       {/* Main Content Area */}
       <main className="flex-1 w-full my-4 flex flex-col items-center justify-center">
         {mode === 'scopri' && (
           <CardScopri
-            animals={ANIMALI_DATA}
+            animals={animalsWithPexels}
             currentIndex={scopriIndex}
             onIndexChange={setScopriIndex}
             onAnimalViewed={unlockAnimal}
@@ -179,31 +272,30 @@ export default function App() {
 
         {mode === 'indovina' && (
           <GiocoIndovina
-            animals={ANIMALI_DATA}
-            onScoreUpdate={setGameScore}
+            animals={animalsWithPexels}
+            onScoreUpdate={(pts) => setGameScore(prev => prev + pts)}
             onAnimalGuessedCorrectly={handleAnimalGuessedCorrectly}
           />
         )}
 
         {mode === 'sfida' && (
-          <ChallengeView
-            animals={ANIMALI_DATA}
-            onCorrectAnswer={(id) => unlockAnimal(id)}
-            onUpdateScore={(pts) => setGameScore((prev) => prev + pts)}
-            onUpdateStreak={handleUpdateStreak}
+          <ConfrontoView
+            animals={animalsWithPexels}
+            onScoreUpdate={(pts) => setGameScore((prev) => prev + pts)}
+            onStreakUpdate={handleUpdateStreak}
           />
         )}
 
         {mode === 'enciclopedia' && (
           <EncyclopediaView
-            animals={ANIMALI_DATA}
+            animals={animalsWithPexels}
             onSelectAnimalForMode={handleSelectAnimalForScopri}
           />
         )}
 
         {mode === 'collezione' && (
           <CollectionView
-            animals={ANIMALI_DATA}
+            animals={animalsWithPexels}
             unlockedAnimalIds={unlockedAnimalIds}
             onSelectAnimalForMode={handleSelectAnimalForScopri}
           />
@@ -217,9 +309,20 @@ export default function App() {
         )}
       </main>
 
+      {/* Pack Selector Modal */}
+      <PackSelectorModal
+        isOpen={isPacksModalOpen}
+        onClose={() => setIsPacksModalOpen(false)}
+        packs={packs}
+        activePackIds={activePackIds}
+        onToggleActivePack={handleToggleActivePack}
+        onUnlockPack={handleUnlockPack}
+      />
+
       {/* Kid-safe Footer */}
       <Footer />
     </div>
   );
 }
+
 
