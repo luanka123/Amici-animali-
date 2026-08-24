@@ -355,7 +355,7 @@ export const CardScopri: React.FC<CardScopriProps> = ({
       <div className="w-full frosted p-3 rounded-2xl border-2 border-amber-300/80 shadow-md flex items-center justify-start gap-2.5 overflow-x-auto no-scrollbar">
         {animals.map((a, idx) => (
           <button
-            key={a.id}
+            key={`${a.id}-${idx}`}
             onClick={() => {
               sound.playPop();
               setActiveTab('foto');

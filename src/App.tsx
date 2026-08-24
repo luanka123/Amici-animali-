@@ -68,12 +68,19 @@ export default function App() {
 
   const [toastMessage, setToastMessage] = useState<{ title: string; desc: string; icon: string } | null>(null);
 
-  // Active combined animals from currently enabled packs
+  // Active combined animals from currently enabled packs (deduplicated by id)
   const rawAnimals = useMemo(() => {
     const combined: Animal[] = [];
+    const seen = new Set<string>();
+
     packs.forEach(pack => {
       if (pack.unlocked && activePackIds.includes(pack.id)) {
-        combined.push(...pack.animali);
+        pack.animali.forEach(animal => {
+          if (!seen.has(animal.id)) {
+            seen.add(animal.id);
+            combined.push(animal);
+          }
+        });
       }
     });
 

@@ -38,7 +38,7 @@ export const PackSelectorModal: React.FC<PackSelectorModalProps> = ({
               <PackageCheck className="w-6 h-6" />
               <div>
                 <h2 className="text-lg md:text-xl font-black font-display leading-tight">
-                  Pacchetti Animali
+                  Pacchetti & Collezioni Animali
                 </h2>
                 <p className="text-xs text-amber-100 font-bold">
                   Scegli con quali collezioni e animali giocare!
@@ -55,6 +55,51 @@ export const PackSelectorModal: React.FC<PackSelectorModalProps> = ({
             >
               <X className="w-5 h-5" />
             </button>
+          </div>
+
+          {/* Info Banner: Lifetime Free No Login required */}
+          <div className="bg-amber-100/90 border-b border-amber-300 p-3 px-4 text-xs font-semibold text-amber-950 flex items-center gap-2.5">
+            <Sparkles className="w-5 h-5 text-amber-600 shrink-0 animate-bounce" />
+            <div>
+              <strong className="font-extrabold text-amber-900">Uso Gratuito Lifetime Senza Registrazione:</strong>
+              <span className="block text-[11px] text-amber-900/80">
+                Puoi usare l'app per sempre gratis con il pacchetto base. L'acquisto è opzionale per sbloccare tutti i pacchetti aggiuntivi (Savana, Oceano, Giungla, Dinosauri).
+              </span>
+            </div>
+          </div>
+
+          {/* Full Pack All-in-One Stripe Banner */}
+          <div className="p-4 bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 text-white m-4 mb-1 rounded-2xl shadow-md border-2 border-amber-300 flex flex-col sm:flex-row items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <div className="text-3xl bg-white/20 p-2 rounded-xl">👑</div>
+              <div>
+                <h4 className="font-black font-display text-sm md:text-base leading-tight">
+                  Versione Completa "Full Pack"
+                </h4>
+                <p className="text-xs text-amber-100 font-semibold">
+                  Tutti i 5 pacchetti sbloccati per sempre (+30 animali) con Stripe!
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 w-full sm:w-auto">
+              <button
+                onClick={() => {
+                  const stripeUrl = (import.meta as any).env?.VITE_STRIPE_PAYMENT_LINK;
+                  if (stripeUrl && stripeUrl.trim() !== '') {
+                    window.open(stripeUrl, '_blank', 'noopener,noreferrer');
+                  } else {
+                    // Unlock all packs
+                    sound.playWin();
+                    packs.forEach(p => onUnlockPack(p.id));
+                  }
+                }}
+                className="w-full sm:w-auto px-4 py-2 bg-white hover:bg-amber-50 text-amber-900 font-black text-xs rounded-xl shadow-md transition-all btn-active flex items-center justify-center gap-1.5"
+              >
+                <ShoppingBag className="w-4 h-4 text-amber-700" />
+                <span>{(import.meta as any).env?.VITE_STRIPE_PAYMENT_LINK ? 'Acquista con Stripe' : 'Sblocca Tutti i Pacchetti 🎁'}</span>
+              </button>
+            </div>
           </div>
 
           {/* Modal Body: List of Packs */}
