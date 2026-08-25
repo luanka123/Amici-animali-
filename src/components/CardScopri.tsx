@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
-import { Volume2, ChevronLeft, ChevronRight, Sparkles, Lightbulb, Camera, Info, Square, Shuffle } from 'lucide-react';
+import { Volume2, ChevronLeft, ChevronRight, Sparkles, Lightbulb, Camera, Info, Square, Shuffle, Zap, Flame, Play, Music } from 'lucide-react';
 import { Animal } from '../types';
 import { HabitatBadge } from './HabitatBadge';
 import { StatCard } from './StatCard';
 import { sound } from '../utils/audio';
 import { getRandomCuriosity } from '../utils/curiosities';
+import { APEX_PREDATOR_IDS } from '../data/packs';
+import { getAnimalSoundMeta } from '../data/sounds';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface CardScopriProps {
@@ -22,18 +24,36 @@ export const CardScopri: React.FC<CardScopriProps> = ({
 }) => {
   const [activeTab, setActiveTab] = useState<'foto' | 'dettagli'>('foto');
   const [isSpeaking, setIsSpeaking] = useState<boolean>(false);
+  const [isPlayingVerso, setIsPlayingVerso] = useState<boolean>(false);
   const [imageError, setImageError] = useState<boolean>(false);
 
   const currentAnimal = animals[currentIndex];
   const [activeCuriosity, setActiveCuriosity] = useState<string>(currentAnimal?.fattoCurioso || '');
+  const soundMeta = currentAnimal ? getAnimalSoundMeta(currentAnimal.id, currentAnimal.nome) : null;
 
   // Reset image error state & curiosity when current animal changes
   React.useEffect(() => {
     setImageError(false);
+    setIsPlayingVerso(false);
     if (currentAnimal) {
       setActiveCuriosity(currentAnimal.fattoCurioso);
     }
   }, [currentIndex, currentAnimal]);
+
+  const handlePlayVerso = (e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    if (!currentAnimal) return;
+
+    sound.playPop();
+    setIsPlayingVerso(true);
+
+    const versoInfo = currentAnimal.verso || soundMeta?.verso || 'Verso caratteristico';
+    sound.playAnimalSound(currentAnimal.id, currentAnimal.audioVerso, `${currentAnimal.nome}! ${versoInfo}!`);
+
+    setTimeout(() => {
+      setIsPlayingVerso(false);
+    }, 1800);
+  };
 
   const handleNextCuriosity = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -202,7 +222,13 @@ export const CardScopri: React.FC<CardScopriProps> = ({
 
                 {/* Overlaid Animal Title & Caption */}
                 <div className="absolute bottom-6 left-6 right-6 text-white flex flex-col md:flex-row md:items-end justify-between gap-4">
-                  <div className="space-y-1">
+                  <div className="space-y-1.5">
+                    {APEX_PREDATOR_IDS.includes(currentAnimal.id) && (
+                      <div className="inline-flex items-center gap-1.5 bg-gradient-to-r from-amber-500 to-red-600 text-white px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider shadow-lg border border-amber-300">
+                        <Zap className="w-3.5 h-3.5 fill-amber-200" />
+                        <span>PREDATORE SUPREMO ALFA ⚡</span>
+                      </div>
+                    )}
                     <h2 className="text-4xl sm:text-5xl md:text-6xl font-black font-display tracking-wide text-white drop-shadow-xl">
                       {currentAnimal.nome}
                     </h2>
@@ -211,16 +237,43 @@ export const CardScopri: React.FC<CardScopriProps> = ({
                       <span className="bg-amber-500/90 text-white px-3 py-0.5 rounded-full text-xs md:text-sm font-black border border-amber-300">
                         {currentAnimal.habitat}
                       </span>
+                      {currentAnimal.trattoDominante && (
+                        <span className="bg-orange-600/90 text-white px-3 py-0.5 rounded-full text-xs md:text-sm font-black border border-orange-400">
+                          {currentAnimal.trattoDominante === 'forza' ? '💪 Forza Titanica' : currentAnimal.trattoDominante === 'velocita' ? '⚡ Velocità Sonica' : '🔥 Aggressività Letale'}
+                        </span>
+                      )}
                     </p>
                   </div>
 
-                  <button
-                    onClick={handleSpeak}
-                    className="self-start md:self-auto p-4 bg-amber-500 hover:bg-amber-600 text-white rounded-2xl shadow-2xl transition-transform active:scale-95 flex items-center gap-2 font-black text-base border-2 border-amber-300"
-                  >
-                    <Volume2 className="w-7 h-7" />
-                    <span className="md:hidden">Ascolta Nome</span>
-                  </button>
+                  {/* ACTION BUTTONS ON PHOTO: ASCOLTA VERSO & ASCOLTA NOME/CURIOSITÀ */}
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={handlePlayVerso}
+                      className={`px-4 py-3.5 rounded-2xl shadow-2xl transition-all active:scale-95 flex items-center gap-2.5 font-black text-sm md:text-base border-2 ${
+                        isPlayingVerso
+                          ? 'bg-gradient-to-r from-red-600 to-orange-500 text-white border-yellow-300 ring-4 ring-orange-400/70 scale-105 animate-pulse'
+                          : 'bg-gradient-to-r from-orange-500 via-amber-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 text-white border-amber-300 hover:shadow-orange-500/50'
+                      }`}
+                      title="Riproduci il verso dell'animale"
+                    >
+                      <span className="text-2xl">{soundMeta?.emoji || '🔊'}</span>
+                      <div className="flex flex-col items-start text-left">
+                        <span className="leading-none text-xs text-amber-200 font-extrabold uppercase tracking-wider">Riproduci Verso</span>
+                        <span className="leading-tight text-sm md:text-base font-black">
+                          {soundMeta?.verso || currentAnimal.verso || 'Ascolta Verso'}
+                        </span>
+                      </div>
+                    </button>
+
+                    <button
+                      onClick={handleSpeak}
+                      className="p-3.5 bg-amber-600/90 hover:bg-amber-600 text-white rounded-2xl shadow-2xl transition-transform active:scale-95 flex items-center gap-2 font-black text-base border-2 border-amber-300/80 backdrop-blur-xs"
+                      title="Ascolta spiegazione vocale"
+                    >
+                      <Volume2 className="w-6 h-6" />
+                      <span className="hidden sm:inline text-sm">Spiegazione</span>
+                    </button>
+                  </div>
                 </div>
               </div>
 

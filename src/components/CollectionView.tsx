@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { Animal } from '../types';
-import { Lock, Sparkles, CheckCircle2, Trophy, Eye, Volume2, RefreshCw } from 'lucide-react';
+import { Lock, Sparkles, CheckCircle2, Trophy, Eye, Volume2, RefreshCw, Play } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { sound } from '../utils/audio';
 import { getRandomCuriosity } from '../utils/curiosities';
+import { getAnimalSoundMeta } from '../data/sounds';
 
 interface CollectionViewProps {
   animals: Animal[];
@@ -16,10 +17,25 @@ export const CollectionView: React.FC<CollectionViewProps> = ({
   unlockedAnimalIds,
 }) => {
   const [selectedAnimal, setSelectedAnimal] = useState<Animal | null>(null);
+  const [playingAnimalId, setPlayingAnimalId] = useState<string | null>(null);
 
   const totalCount = animals.length;
   const unlockedCount = unlockedAnimalIds.length;
   const percentage = Math.round((unlockedCount / totalCount) * 100);
+
+  const handlePlayAnimalVerso = (animal: Animal, e: React.MouseEvent) => {
+    e.stopPropagation();
+    sound.playPop();
+    setPlayingAnimalId(animal.id);
+
+    const soundMeta = getAnimalSoundMeta(animal.id, animal.nome);
+    const versoInfo = animal.verso || soundMeta.verso;
+    sound.playAnimalSound(animal.id, animal.audioVerso, `${animal.nome}! ${versoInfo}!`);
+
+    setTimeout(() => {
+      setPlayingAnimalId(null);
+    }, 1800);
+  };
 
   const handleCardClick = (animal: Animal) => {
     const isUnlocked = unlockedAnimalIds.includes(animal.id);
@@ -114,9 +130,25 @@ export const CollectionView: React.FC<CollectionViewProps> = ({
 
                 {/* Overlay Badge for Locked or Unlocked */}
                 {isUnlocked ? (
-                  <div className="absolute top-2.5 right-2.5 bg-emerald-500 text-white p-1.5 rounded-full shadow-md">
-                    <CheckCircle2 className="w-5 h-5" />
-                  </div>
+                  <>
+                    <div className="absolute top-2.5 right-2.5 bg-emerald-500 text-white p-1.5 rounded-full shadow-md z-10">
+                      <CheckCircle2 className="w-5 h-5" />
+                    </div>
+
+                    {/* On-photo Verso button for unlocked animals */}
+                    <button
+                      onClick={(e) => handlePlayAnimalVerso(animal, e)}
+                      className={`absolute top-2.5 left-2.5 px-2 py-1 rounded-xl text-xs font-black shadow-lg transition-all active:scale-95 flex items-center gap-1 border z-10 ${
+                        playingAnimalId === animal.id
+                          ? 'bg-gradient-to-r from-red-600 to-orange-500 text-white border-yellow-300 ring-2 ring-orange-400 scale-105 animate-pulse'
+                          : 'bg-black/70 hover:bg-black/90 text-white border-purple-300/80 backdrop-blur-xs'
+                      }`}
+                      title={`Ascolta il verso di ${animal.nome}`}
+                    >
+                      <span>{getAnimalSoundMeta(animal.id, animal.nome).emoji}</span>
+                      <span className="text-[10px]">Verso 🔊</span>
+                    </button>
+                  </>
                 ) : (
                   <div className="absolute inset-0 bg-stone-900/50 backdrop-blur-[2px] flex flex-col items-center justify-center text-white gap-2">
                     <Lock className="w-8 h-8 text-amber-300 drop-shadow-lg animate-bounce" />
@@ -190,6 +222,27 @@ export const CollectionView: React.FC<CollectionViewProps> = ({
                     <Sparkles className="w-4 h-4" />
                     <span>Collezione Sbloccata</span>
                   </div>
+
+                  {/* On-photo Verso button in modal */}
+                  <button
+                    onClick={(e) => handlePlayAnimalVerso(selectedAnimal, e)}
+                    className={`absolute bottom-4 right-4 px-4 py-2 rounded-2xl shadow-xl transition-all active:scale-95 flex items-center gap-2 border ${
+                      playingAnimalId === selectedAnimal.id
+                        ? 'bg-gradient-to-r from-red-600 to-orange-500 text-white border-yellow-300 ring-4 ring-orange-400 scale-105 animate-pulse'
+                        : 'bg-black/75 hover:bg-black/90 text-white border-purple-300/80 backdrop-blur-md'
+                    }`}
+                    title={`Ascolta il verso di ${selectedAnimal.nome}`}
+                  >
+                    <span className="text-xl">
+                      {getAnimalSoundMeta(selectedAnimal.id, selectedAnimal.nome).emoji}
+                    </span>
+                    <div className="flex flex-col items-start text-left">
+                      <span className="text-[10px] text-purple-300 font-extrabold uppercase leading-none">Verso</span>
+                      <span className="text-xs sm:text-sm font-black leading-tight text-white">
+                        {selectedAnimal.verso || getAnimalSoundMeta(selectedAnimal.id, selectedAnimal.nome).verso}
+                      </span>
+                    </div>
+                  </button>
                 </div>
 
                 <div className="flex items-center justify-center gap-3">

@@ -2,9 +2,10 @@ import React, { useState } from 'react';
 import { Animal, AnimalHabitat } from '../types';
 import { HabitatBadge } from './HabitatBadge';
 import { StatCard } from './StatCard';
-import { Volume2, Sparkles, Filter, X, Lightbulb, RefreshCw } from 'lucide-react';
+import { Volume2, Sparkles, Filter, X, Lightbulb, RefreshCw, Play } from 'lucide-react';
 import { sound } from '../utils/audio';
 import { getRandomCuriosity } from '../utils/curiosities';
+import { getAnimalSoundMeta } from '../data/sounds';
 
 interface GalleriaAnimaliProps {
   animals: Animal[];
@@ -18,6 +19,7 @@ export const GalleriaAnimali: React.FC<GalleriaAnimaliProps> = ({
   const [filterHabitat, setFilterHabitat] = useState<AnimalHabitat | 'tutti'>('tutti');
   const [activeModalAnimal, setActiveModalAnimal] = useState<Animal | null>(null);
   const [isModalFlipped, setIsModalFlipped] = useState<boolean>(false);
+  const [playingAnimalId, setPlayingAnimalId] = useState<string | null>(null);
 
   const filteredAnimals = animals.filter(
     (a) => filterHabitat === 'tutti' || a.habitat === filterHabitat
@@ -33,6 +35,20 @@ export const GalleriaAnimali: React.FC<GalleriaAnimaliProps> = ({
     sound.playPop();
     sound.stopSpeech();
     setActiveModalAnimal(null);
+  };
+
+  const handlePlayVerso = (animal: Animal, e: React.MouseEvent) => {
+    e.stopPropagation();
+    sound.playPop();
+    setPlayingAnimalId(animal.id);
+
+    const soundMeta = getAnimalSoundMeta(animal.id, animal.nome);
+    const versoInfo = animal.verso || soundMeta.verso;
+    sound.playAnimalSound(animal.id, animal.audioVerso, `${animal.nome}! ${versoInfo}!`);
+
+    setTimeout(() => {
+      setPlayingAnimalId(null);
+    }, 1800);
   };
 
   const handleSpeakAnimal = (animal: Animal, e: React.MouseEvent) => {
@@ -139,14 +155,29 @@ export const GalleriaAnimali: React.FC<GalleriaAnimaliProps> = ({
                   </button>
                 </div>
 
-                {/* Photo */}
-                <div className="w-full h-40 rounded-2xl overflow-hidden bg-amber-50 mb-3 relative">
+                {/* Photo with Overlay Verso Button */}
+                <div className="w-full h-44 rounded-2xl overflow-hidden bg-amber-50 mb-3 relative group/photo">
                   <img
                     src={animal.foto}
                     alt={animal.nome}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent pointer-events-none" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/20 pointer-events-none" />
+                  
+                  {/* ON-PHOTO VERSO BUTTON */}
+                  <button
+                    onClick={(e) => handlePlayVerso(animal, e)}
+                    className={`absolute top-2 right-2 px-2.5 py-1 rounded-xl font-black text-xs shadow-lg transition-all active:scale-95 flex items-center gap-1 border ${
+                      playingAnimalId === animal.id
+                        ? 'bg-gradient-to-r from-red-600 to-orange-500 text-white border-yellow-300 ring-2 ring-orange-400 scale-105 animate-pulse'
+                        : 'bg-black/70 hover:bg-black/90 text-white border-amber-300/70 backdrop-blur-xs'
+                    }`}
+                    title={`Ascolta il verso di ${animal.nome}`}
+                  >
+                    <span>{getAnimalSoundMeta(animal.id, animal.nome).emoji}</span>
+                    <span className="text-[11px]">Verso 🔊</span>
+                  </button>
+
                   <span className="absolute bottom-2 left-3 text-white font-black font-display text-xl drop-shadow-md">
                     {animal.nome}
                   </span>

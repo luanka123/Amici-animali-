@@ -27,6 +27,7 @@ import {
 } from 'lucide-react';
 import { Animal, AgeBand, GameState } from '../types';
 import { sound } from '../utils/audio';
+import { getAnimalSoundMeta } from '../data/sounds';
 
 interface GiocoIndovinaProps {
   animals: Animal[];
@@ -686,13 +687,28 @@ export const GiocoIndovina: React.FC<GiocoIndovinaProps> = ({
               </div>
             </div>
 
-            <button
-              onClick={handleNextRound}
-              className="w-full sm:w-auto flex items-center justify-center gap-2 bg-emerald-600 text-white font-black px-6 py-3.5 rounded-2xl shadow-xl hover:bg-emerald-700 btn-active transition-all text-base md:text-lg border-2 border-emerald-400 shrink-0"
-            >
-              <span>Prossimo Animale</span>
-              <ChevronRight className="w-6 h-6" />
-            </button>
+            <div className="flex items-center gap-2.5 w-full sm:w-auto">
+              <button
+                onClick={() => {
+                  sound.playPop();
+                  const meta = getAnimalSoundMeta(targetAnimal.id, targetAnimal.nome);
+                  sound.playAnimalSound(targetAnimal.id, targetAnimal.audioVerso, `${targetAnimal.nome}! ${targetAnimal.verso || meta.verso}!`);
+                }}
+                className="flex-1 sm:flex-initial flex items-center justify-center gap-2 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-black px-4 py-3.5 rounded-2xl shadow-xl btn-active transition-all text-sm md:text-base border-2 border-amber-300"
+                title="Ascolta il verso dell'animale indovinato"
+              >
+                <span>{getAnimalSoundMeta(targetAnimal.id, targetAnimal.nome).emoji}</span>
+                <span>Ascolta Verso 🔊</span>
+              </button>
+
+              <button
+                onClick={handleNextRound}
+                className="flex-1 sm:flex-initial flex items-center justify-center gap-2 bg-emerald-600 text-white font-black px-6 py-3.5 rounded-2xl shadow-xl hover:bg-emerald-700 btn-active transition-all text-base md:text-lg border-2 border-emerald-400 shrink-0"
+              >
+                <span>Prossimo</span>
+                <ChevronRight className="w-6 h-6" />
+              </button>
+            </div>
           </div>
         )}
 

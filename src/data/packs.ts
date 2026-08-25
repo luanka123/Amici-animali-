@@ -1,11 +1,26 @@
 import { AnimalPack, Animal } from '../types';
 import { ANIMALI_DATA } from './animals';
 
+export const APEX_PREDATOR_IDS = [
+  'falco-pellegrino',
+  'ghepardo',
+  'trex',
+  'coccodrillo',
+  'squalo-bianco',
+  'tigre',
+  'leone',
+  'orso-grizzly',
+  'aquila-reale',
+  'lupo',
+  'mamba-nero',
+  'velociraptor'
+];
+
 export const INITIAL_PACKS: AnimalPack[] = [
   {
     id: 'pack_mix',
     titolo: 'Tutto il Mondo Intero 🌍',
-    descrizione: 'Tutti gli animali del pianeta riuniti insieme! Oltre 30 creature da terra, mare, cielo e preistoria!',
+    descrizione: 'Tutti gli animali del pianeta riuniti insieme! Oltre 40 creature da terra, mare, cielo e preistoria!',
     icona: '🌍',
     habitatPrevalente: 'savana',
     gratuito: true,
@@ -14,9 +29,20 @@ export const INITIAL_PACKS: AnimalPack[] = [
     animali: ANIMALI_DATA.map(a => ({ ...a, packId: 'pack_mix' })),
   },
   {
+    id: 'pack_predatori',
+    titolo: 'Predatori Supremi: Forti, Veloci & Aggressivi ⚡🔥',
+    descrizione: '12 campioni assoluti selezionati per forza titanica, velocità supersonica e morsi devastanti: Falco Pellegrino, Ghepardo, T-Rex, Coccodrillo, Squalo Bianco, Tigre, Leone, Orso Grizzly, Aquila Reale, Lupo, Mamba Nero e Velociraptor!',
+    icona: '⚡',
+    habitatPrevalente: 'savana',
+    gratuito: false,
+    unlocked: false,
+    prezzoSimulato: '2,99 €',
+    animali: ANIMALI_DATA.filter(a => APEX_PREDATOR_IDS.includes(a.id)).map(a => ({ ...a, packId: 'pack_predatori' })),
+  },
+  {
     id: 'pack_savana',
     titolo: 'Savana & Terra Selvaggia 🦁',
-    descrizione: '10 straordinari abitanti delle praterie africane e dei deserti: leone, ghepardo, elefante, giraffa, cammello e molti altri!',
+    descrizione: '12 straordinari abitanti delle praterie africane e dei deserti: leone, ghepardo, elefante, giraffa, coccodrillo, mamba nero, cammello e molti altri!',
     icona: '🦁',
     habitatPrevalente: 'savana',
     gratuito: false,
@@ -38,7 +64,7 @@ export const INITIAL_PACKS: AnimalPack[] = [
   {
     id: 'pack_giungla',
     titolo: 'Giungla & Foresta Incantata 🌿',
-    descrizione: '10 animali affascinanti della foresta pluviale e dei boschi: panda, gorilla, camaleonte, tigre, koala, bradipo e tucani!',
+    descrizione: '12 animali affascinanti della foresta pluviale e dei boschi: falco pellegrino, orso grizzly, lupo grigio, panda, gorilla, camaleonte, tigre, koala, bradipo e tucani!',
     icona: '🌿',
     habitatPrevalente: 'giungla',
     gratuito: false,

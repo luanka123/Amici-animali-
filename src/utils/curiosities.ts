@@ -1,4 +1,5 @@
 import { Animal } from '../types';
+import { getAnimalSoundMeta } from '../data/sounds';
 
 /**
  * Mappa di curiosità multiple per ciascun animale.
@@ -220,6 +221,36 @@ export const EXTRA_CURIOSITIES: Record<string, string[]> = {
     "Possono tuffarsi nel mare polare fino a oltre 500 metri di profondità e trattenere il respiro per 20 minuti!",
     "Per riscaldarsi nelle tempeste polari, migliaia di pinguini si stringono insieme a turno ruotando dal centro all'esterno!",
     "I pinguini imperatore sono i più alti e pesanti di tutte le specie di pinguini viventi!",
+  ],
+  "falco-pellegrino": [
+    "In picchiata aerea raggiunge i 389 km/h, rendendolo ufficialmente l'essere vivente più veloce di tutto il pianeta Terra!",
+    "Le sue narici hanno piccoli coni ossei che deviano i vortici d'aria permettendogli di respirare a 300 km/h!",
+    "Possiede una terza palpebra trasparente che protegge gli occhi come un paio di occhialini durante i tuffi aerei ad alta velocità!",
+    "Può avvistare una preda da oltre un chilometro di altezza grazie a occhi con zoom naturale!",
+  ],
+  coccodrillo: [
+    "Ha la forza di morso più potente del regno animale vivente: può chiudere le mascelle con una forza devastante di 22.000 Newton!",
+    "Può trattenere il respiro sott'acqua fino a due ore se riposa immobile sul fondale!",
+    "I coccodrilli hanno una speciale valvola nella gola che permette loro di aprire la bocca sott'acqua senza annegare!",
+    "Esistono sul nostro pianeta da oltre 200 milioni di anni, sopravvissuti persino all'estinzione dei dinosauri!",
+  ],
+  "orso-grizzly": [
+    "Una sua singola zampata ha una forza d'impatto devastante tale da poter spezzare tronchi d'albero e zanne d'osso!",
+    "Nonostante pesi 400 kg, può scattare a oltre 56 km/h, più veloce di un atleta olimpico!",
+    "Ha un olfatto 7 volte più sviluppato di quello di un cane da caccia e può fiutare cibo a 30 km di distanza!",
+    "Durante il letargo invernale il suo cuore rallenta fino a soli 8 battiti al minuto senza mangiare o bere per mesi!",
+  ],
+  lupo: [
+    "I lupi cacciano in perfetta sintonia nel branco e possono inseguire le prede per oltre 20 km senza mai stancarsi!",
+    "Il loro ululato può essere udito fino a 16 km di distanza nella foresta silenziosa per radunare il branco!",
+    "La pressione delle mascelle del lupo è di oltre 400 kg per centimetro quadrato, capace di frantumare ossa robuste.",
+    "Nel branco c'è un rigido codice di rispetto e affetto: i lupi si prendono cura anche degli anziani e dei cuccioli feriti!",
+  ],
+  "mamba-nero": [
+    "È il serpente più veloce del mondo (fino a 20 km/h) e il suo nome deriva dal colore nero pece dell'interno della sua bocca!",
+    "Quando si sente minacciato, alza fino a un metro di corpo in aria e spalanca le fauci nere emettendo un forte sibilo!",
+    "I suoi riflessi sono così fulminei da poter colpire e tornare in guardia in una frazione di secondo!",
+    "Nonostante la fama temibile, preferisce sempre la fuga silenziosa e usa la sua velocità per nascondersi tra gli anfratti rocciosi!",
   ]
 };
 
@@ -245,10 +276,15 @@ export function getRandomCuriosity(animalId: string, currentCuriosity?: string):
 export function randomizeAnimalCuriosities<T extends Animal>(animals: T[]): T[] {
   return animals.map(animal => {
     const freshFact = getRandomCuriosity(animal.id);
+    const soundMeta = getAnimalSoundMeta(animal.id, animal.nome);
+    const primaryAudio = animal.audioVerso || (soundMeta.realAudioUrls && soundMeta.realAudioUrls.length > 0 ? soundMeta.realAudioUrls[0] : undefined);
+
     return {
       ...animal,
       fattoCurioso: freshFact,
-      fattiCuriosi: EXTRA_CURIOSITIES[animal.id] || [animal.fattoCurioso]
+      fattiCuriosi: EXTRA_CURIOSITIES[animal.id] || [animal.fattoCurioso],
+      verso: animal.verso || soundMeta.verso,
+      audioVerso: primaryAudio,
     };
   });
 }

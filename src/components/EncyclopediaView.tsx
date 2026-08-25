@@ -1,31 +1,55 @@
 import React, { useState } from 'react';
 import { Animal, AnimalHabitat } from '../types';
-import { Search, Volume2, Sparkles, Filter, Info, ShieldAlert, RefreshCw } from 'lucide-react';
+import { Search, Volume2, Sparkles, Filter, Info, ShieldAlert, RefreshCw, Zap, Flame, Swords, Play } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { sound } from '../utils/audio';
 import { getRandomCuriosity } from '../utils/curiosities';
+import { APEX_PREDATOR_IDS } from '../data/packs';
+import { getAnimalSoundMeta } from '../data/sounds';
 
 interface EncyclopediaViewProps {
   animals: Animal[];
   onSelectAnimalForMode?: (animal: Animal) => void;
 }
 
+type FilterCategory = AnimalHabitat | 'tutti' | 'predatori';
+
 export const EncyclopediaView: React.FC<EncyclopediaViewProps> = ({ animals }) => {
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedHabitat, setSelectedHabitat] = useState<AnimalHabitat | 'tutti'>('tutti');
+  const [selectedCategory, setSelectedCategory] = useState<FilterCategory>('tutti');
   const [activeAnimal, setActiveAnimal] = useState<Animal | null>(null);
+  const [playingAnimalId, setPlayingAnimalId] = useState<string | null>(null);
 
-  // Filter animals based on search query and habitat filter
+  // Filter animals based on search query and category filter
   const filteredAnimals = animals.filter((animal) => {
     const matchesSearch =
       animal.nome.toLowerCase().includes(searchQuery.toLowerCase()) ||
       animal.fattoCurioso.toLowerCase().includes(searchQuery.toLowerCase()) ||
       animal.habitat.toLowerCase().includes(searchQuery.toLowerCase());
 
-    const matchesHabitat = selectedHabitat === 'tutti' || animal.habitat === selectedHabitat;
+    let matchesCategory = true;
+    if (selectedCategory === 'predatori') {
+      matchesCategory = APEX_PREDATOR_IDS.includes(animal.id);
+    } else if (selectedCategory !== 'tutti') {
+      matchesCategory = animal.habitat === selectedCategory;
+    }
 
-    return matchesSearch && matchesHabitat;
+    return matchesSearch && matchesCategory;
   });
+
+  const handlePlayAnimalVerso = (animal: Animal, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    sound.playPop();
+    setPlayingAnimalId(animal.id);
+
+    const soundMeta = getAnimalSoundMeta(animal.id, animal.nome);
+    const versoInfo = animal.verso || soundMeta.verso;
+    sound.playAnimalSound(animal.id, animal.audioVerso, `${animal.nome}! ${versoInfo}!`);
+
+    setTimeout(() => {
+      setPlayingAnimalId(null);
+    }, 1800);
+  };
 
   const handleSpeak = (text: string) => {
     sound.playPop();
@@ -40,6 +64,10 @@ export const EncyclopediaView: React.FC<EncyclopediaViewProps> = ({ animals }) =
         return 'bg-teal-100 text-teal-900 border-teal-300';
       case 'foresta':
         return 'bg-emerald-100 text-emerald-900 border-emerald-300';
+      case 'giungla':
+        return 'bg-lime-100 text-lime-900 border-lime-300';
+      case 'dinosauri':
+        return 'bg-stone-200 text-stone-900 border-stone-400';
     }
   };
 
@@ -68,7 +96,7 @@ export const EncyclopediaView: React.FC<EncyclopediaViewProps> = ({ animals }) =
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Cerca animale (es. Leone, bambù)..."
+              placeholder="Cerca animale (es. Falco, Leone, Morso)..."
               className="w-full pl-10 pr-4 py-2.5 bg-white/90 rounded-2xl border border-emerald-200 text-sm font-bold text-stone-800 focus:outline-hidden focus:ring-2 focus:ring-emerald-500 transition-all shadow-2xs"
             />
             {searchQuery && (
@@ -82,28 +110,96 @@ export const EncyclopediaView: React.FC<EncyclopediaViewProps> = ({ animals }) =
           </div>
         </div>
 
-        {/* Habitat Filter Pills */}
+        {/* Filter Pills */}
         <div className="flex items-center gap-2 pt-2 border-t border-emerald-100 overflow-x-auto no-scrollbar">
           <span className="text-xs font-bold text-stone-500 flex items-center gap-1 shrink-0">
-            <Filter className="w-3.5 h-3.5" /> Habitat:
+            <Filter className="w-3.5 h-3.5" /> Schede & Filtri:
           </span>
 
-          {(['tutti', 'savana', 'oceano', 'foresta'] as const).map((habitat) => (
-            <button
-              key={habitat}
-              onClick={() => {
-                sound.playPop();
-                setSelectedHabitat(habitat);
-              }}
-              className={`px-3 py-1 rounded-xl font-extrabold text-xs uppercase tracking-wider transition-all btn-active shrink-0 ${
-                selectedHabitat === habitat
-                  ? 'bg-emerald-600 text-white shadow-xs'
-                  : 'bg-white/70 text-stone-600 hover:bg-emerald-50'
-              }`}
-            >
-              {habitat === 'tutti' ? '🌟 Tutti' : habitat === 'savana' ? '🦁 Savana' : habitat === 'oceano' ? '🐬 Oceano' : '🌲 Foresta'}
-            </button>
-          ))}
+          <button
+            onClick={() => {
+              sound.playPop();
+              setSelectedCategory('tutti');
+            }}
+            className={`px-3.5 py-1.5 rounded-xl font-extrabold text-xs uppercase tracking-wider transition-all btn-active shrink-0 ${
+              selectedCategory === 'tutti'
+                ? 'bg-emerald-600 text-white shadow-xs'
+                : 'bg-white/70 text-stone-600 hover:bg-emerald-50'
+            }`}
+          >
+            🌟 Tutti ({animals.length})
+          </button>
+
+          <button
+            onClick={() => {
+              sound.playPop();
+              setSelectedCategory('predatori');
+            }}
+            className={`px-3.5 py-1.5 rounded-xl font-black text-xs uppercase tracking-wider transition-all btn-active shrink-0 flex items-center gap-1.5 ${
+              selectedCategory === 'predatori'
+                ? 'bg-gradient-to-r from-orange-500 via-amber-500 to-red-500 text-white shadow-md ring-2 ring-amber-300'
+                : 'bg-amber-100/90 text-amber-950 hover:bg-amber-200 border border-amber-300'
+            }`}
+          >
+            <Zap className="w-3.5 h-3.5 fill-amber-300 text-amber-200" />
+            <span>⚡ Forti, Veloci & Aggressivi (12)</span>
+          </button>
+
+          <button
+            onClick={() => {
+              sound.playPop();
+              setSelectedCategory('savana');
+            }}
+            className={`px-3 py-1.5 rounded-xl font-extrabold text-xs uppercase tracking-wider transition-all btn-active shrink-0 ${
+              selectedCategory === 'savana'
+                ? 'bg-amber-600 text-white shadow-xs'
+                : 'bg-white/70 text-stone-600 hover:bg-amber-50'
+            }`}
+          >
+            🦁 Savana
+          </button>
+
+          <button
+            onClick={() => {
+              sound.playPop();
+              setSelectedCategory('oceano');
+            }}
+            className={`px-3 py-1.5 rounded-xl font-extrabold text-xs uppercase tracking-wider transition-all btn-active shrink-0 ${
+              selectedCategory === 'oceano'
+                ? 'bg-teal-600 text-white shadow-xs'
+                : 'bg-white/70 text-stone-600 hover:bg-teal-50'
+            }`}
+          >
+            🐬 Oceano
+          </button>
+
+          <button
+            onClick={() => {
+              sound.playPop();
+              setSelectedCategory('foresta');
+            }}
+            className={`px-3 py-1.5 rounded-xl font-extrabold text-xs uppercase tracking-wider transition-all btn-active shrink-0 ${
+              selectedCategory === 'foresta'
+                ? 'bg-emerald-600 text-white shadow-xs'
+                : 'bg-white/70 text-stone-600 hover:bg-emerald-50'
+            }`}
+          >
+            🌲 Foresta
+          </button>
+
+          <button
+            onClick={() => {
+              sound.playPop();
+              setSelectedCategory('dinosauri');
+            }}
+            className={`px-3 py-1.5 rounded-xl font-extrabold text-xs uppercase tracking-wider transition-all btn-active shrink-0 ${
+              selectedCategory === 'dinosauri'
+                ? 'bg-stone-700 text-white shadow-xs'
+                : 'bg-white/70 text-stone-600 hover:bg-stone-100'
+            }`}
+          >
+            🦕 Dinosauri
+          </button>
         </div>
       </div>
 
@@ -133,27 +229,61 @@ export const EncyclopediaView: React.FC<EncyclopediaViewProps> = ({ animals }) =
                     }}
                     className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
                   />
-                  <span
-                    className={`absolute top-3 left-3 text-xs font-black uppercase px-3 py-1 rounded-full border-2 shadow-sm ${getHabitatBadgeColor(
-                      animal.habitat
-                    )}`}
-                  >
-                    {animal.habitat}
-                  </span>
-                  <button
-                    onClick={() => handleSpeak(`${animal.nome}. ${animal.fattoCurioso}`)}
-                    className="absolute top-3 right-3 p-2.5 bg-white/90 hover:bg-white text-emerald-950 rounded-full shadow-lg transition-all btn-active border border-emerald-200"
-                    title="Ascolta curiosità"
-                  >
-                    <Volume2 className="w-5 h-5 text-emerald-700" />
-                  </button>
+                  <div className="absolute top-3 left-3 flex flex-col gap-1.5 items-start">
+                    <span
+                      className={`text-xs font-black uppercase px-3 py-1 rounded-full border-2 shadow-sm ${getHabitatBadgeColor(
+                        animal.habitat
+                      )}`}
+                    >
+                      {animal.habitat}
+                    </span>
+                    {APEX_PREDATOR_IDS.includes(animal.id) && (
+                      <span className="bg-gradient-to-r from-amber-500 to-red-600 text-white text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full shadow-md border border-amber-200 flex items-center gap-1 animate-pulse">
+                        <Zap className="w-3 h-3 fill-amber-200" />
+                        <span>PREDATORE ALFA</span>
+                      </span>
+                    )}
+                  </div>
+                  {/* On-photo Verso button and Speech button */}
+                  <div className="absolute top-3 right-3 flex items-center gap-2">
+                    <button
+                      onClick={(e) => handlePlayAnimalVerso(animal, e)}
+                      className={`p-2.5 rounded-full shadow-lg transition-all btn-active border flex items-center gap-1.5 ${
+                        playingAnimalId === animal.id
+                          ? 'bg-gradient-to-r from-red-600 to-orange-500 text-white border-yellow-300 ring-2 ring-orange-400 scale-110 animate-pulse'
+                          : 'bg-white/95 hover:bg-white text-orange-600 hover:text-orange-700 border-orange-200'
+                      }`}
+                      title={`Riproduci il verso di ${animal.nome}`}
+                    >
+                      <span className="text-sm leading-none">
+                        {getAnimalSoundMeta(animal.id, animal.nome).emoji}
+                      </span>
+                      <span className="text-xs font-black hidden sm:inline text-stone-900">
+                        Verso
+                      </span>
+                    </button>
+                    <button
+                      onClick={() => handleSpeak(`${animal.nome}. ${animal.fattoCurioso}`)}
+                      className="p-2.5 bg-white/90 hover:bg-white text-emerald-950 rounded-full shadow-lg transition-all btn-active border border-emerald-200"
+                      title="Ascolta curiosità"
+                    >
+                      <Volume2 className="w-5 h-5 text-emerald-700" />
+                    </button>
+                  </div>
                 </div>
 
                 {/* Content */}
                 <div className="p-5 space-y-3">
-                  <h3 className="text-2xl font-black font-display text-stone-900 leading-tight">
-                    {animal.nome}
-                  </h3>
+                  <div className="flex items-center justify-between gap-2">
+                    <h3 className="text-2xl font-black font-display text-stone-900 leading-tight">
+                      {animal.nome}
+                    </h3>
+                    {animal.trattoDominante && (
+                      <span className="text-xs font-black px-2 py-0.5 rounded-lg bg-orange-100 text-orange-900 border border-orange-300 capitalize shrink-0">
+                        {animal.trattoDominante === 'forza' ? '💪 Forza' : animal.trattoDominante === 'velocita' ? '⚡ Velocità' : '🔥 Aggressivo'}
+                      </span>
+                    )}
+                  </div>
 
                   <p className="text-sm font-semibold text-stone-800 line-clamp-3 bg-emerald-50/70 p-3 rounded-2xl border border-emerald-200">
                     💡 {animal.fattoCurioso}
@@ -221,6 +351,34 @@ export const EncyclopediaView: React.FC<EncyclopediaViewProps> = ({ animals }) =
                   }}
                   className="w-full h-full object-cover"
                 />
+
+                {/* Verso button placed directly on the photo */}
+                <button
+                  onClick={(e) => handlePlayAnimalVerso(activeAnimal, e)}
+                  className={`absolute top-4 left-4 px-4 py-2.5 rounded-2xl shadow-xl transition-all btn-active border flex items-center gap-2 z-10 ${
+                    playingAnimalId === activeAnimal.id
+                      ? 'bg-gradient-to-r from-red-600 to-orange-500 text-white border-yellow-300 ring-4 ring-orange-400/80 scale-105 animate-pulse'
+                      : 'bg-black/75 hover:bg-black/90 text-white border-amber-300/60 backdrop-blur-md'
+                  }`}
+                  title={`Riproduci il verso di ${activeAnimal.nome}`}
+                >
+                  <span className="text-xl leading-none">
+                    {getAnimalSoundMeta(activeAnimal.id, activeAnimal.nome).emoji}
+                  </span>
+                  <div className="flex flex-col items-start text-left">
+                    <span className="text-[10px] text-amber-300 font-extrabold uppercase leading-none">Verso</span>
+                    <span className="text-xs sm:text-sm font-black leading-tight text-white">
+                      {activeAnimal.verso || getAnimalSoundMeta(activeAnimal.id, activeAnimal.nome).verso}
+                    </span>
+                  </div>
+                </button>
+
+                {APEX_PREDATOR_IDS.includes(activeAnimal.id) && (
+                  <div className="absolute bottom-4 left-4 bg-black/75 backdrop-blur-md px-3.5 py-1.5 rounded-2xl border border-amber-400 flex items-center gap-2 text-amber-300 font-black text-xs">
+                    <Zap className="w-4 h-4 fill-amber-400" />
+                    <span>SELEZIONE FORTE, VELOCE & AGGRESSIVO</span>
+                  </div>
+                )}
               </div>
 
               <div className="flex items-center justify-between">
@@ -235,6 +393,20 @@ export const EncyclopediaView: React.FC<EncyclopediaViewProps> = ({ animals }) =
                   <span>Ascolta 🔊</span>
                 </button>
               </div>
+
+              {activeAnimal.trattoDominante && (
+                <div className="flex items-center gap-3 bg-stone-800/80 p-3 rounded-2xl border border-amber-400/40">
+                  <div className="text-amber-400 font-black text-sm flex items-center gap-1.5">
+                    <Flame className="w-4 h-4 text-orange-400" />
+                    <span>Tratto Speciale: <strong className="text-white uppercase">{activeAnimal.trattoDominante}</strong></span>
+                  </div>
+                  {activeAnimal.livelloPericolosita && (
+                    <div className="ml-auto text-xs font-black text-amber-300 bg-amber-950/60 px-3 py-1 rounded-xl border border-amber-500/50">
+                      Livello Potenza: {'⚡'.repeat(activeAnimal.livelloPericolosita)}
+                    </div>
+                  )}
+                </div>
+              )}
 
               <div className="bg-stone-800/90 rounded-2xl p-5 border border-emerald-300/40 text-base font-bold text-stone-200 space-y-2">
                 <div className="flex items-center justify-between gap-2">

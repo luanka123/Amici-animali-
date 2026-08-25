@@ -28,6 +28,10 @@ export interface Animal {
   fattiCuriosi?: string[];
   indizi: [string, string, string]; // [generico, medio, specifico]
   packId?: string;
+  trattoDominante?: 'forza' | 'velocita' | 'aggressivita' | 'equilibrio';
+  livelloPericolosita?: number; // 1-5 stelle
+  verso?: string; // Nome testuale o onomatopea del verso (es. "Ruggito", "Barrito", "Ululato", "ROAR!")
+  audioVerso?: string; // URL audio reale o tipo di sintetizzatore per riproduzione
 }
 
 export interface AnimalPack {

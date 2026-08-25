@@ -27,6 +27,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
+import { getAnimalSoundMeta } from '../data/sounds';
 
 interface ConfrontoViewProps {
   animals: Animal[];
@@ -493,6 +494,21 @@ export const ConfrontoView: React.FC<ConfrontoViewProps> = ({
                     }}
                     className="w-full h-full object-cover"
                   />
+                  
+                  {/* On-photo Verso button */}
+                  <button
+                    onClick={() => {
+                      sound.playPop();
+                      const meta = getAnimalSoundMeta(playerAnimal.id, playerAnimal.nome);
+                      sound.playAnimalSound(playerAnimal.id, playerAnimal.audioVerso, `${playerAnimal.nome}! ${playerAnimal.verso || meta.verso}!`);
+                    }}
+                    className="absolute top-3 right-3 px-3 py-1.5 bg-black/70 hover:bg-black/90 text-white rounded-xl font-black text-xs border border-amber-300 shadow-md backdrop-blur-xs flex items-center gap-1.5 active:scale-95 transition-transform"
+                    title={`Ascolta il verso di ${playerAnimal.nome}`}
+                  >
+                    <span>{getAnimalSoundMeta(playerAnimal.id, playerAnimal.nome).emoji}</span>
+                    <span>Verso 🔊</span>
+                  </button>
+
                   <div className="absolute bottom-3 left-3">
                     <HabitatBadge habitat={playerAnimal.habitat} size="md" />
                   </div>
@@ -581,6 +597,21 @@ export const ConfrontoView: React.FC<ConfrontoViewProps> = ({
                         }}
                         className="w-full h-full object-cover"
                       />
+                      
+                      {/* On-photo Verso button */}
+                      <button
+                        onClick={() => {
+                          sound.playPop();
+                          const meta = getAnimalSoundMeta(opponentAnimal.id, opponentAnimal.nome);
+                          sound.playAnimalSound(opponentAnimal.id, opponentAnimal.audioVerso, `${opponentAnimal.nome}! ${opponentAnimal.verso || meta.verso}!`);
+                        }}
+                        className="absolute top-3 right-3 px-3 py-1.5 bg-black/70 hover:bg-black/90 text-white rounded-xl font-black text-xs border border-amber-300 shadow-md backdrop-blur-xs flex items-center gap-1.5 active:scale-95 transition-transform"
+                        title={`Ascolta il verso di ${opponentAnimal.nome}`}
+                      >
+                        <span>{getAnimalSoundMeta(opponentAnimal.id, opponentAnimal.nome).emoji}</span>
+                        <span>Verso 🔊</span>
+                      </button>
+
                       <div className="absolute bottom-3 left-3">
                         <HabitatBadge habitat={opponentAnimal.habitat} size="md" />
                       </div>

@@ -1,6 +1,6 @@
 {
   "name": "Amici Animali",
-  "description": "App educativa per bambini (4-9 anni) con carte animali 3D, modalità Scopri e gioco Indovina con indizi in italiano.",
+  "description": "App educativa interattiva con carte animali, modalità Scopri, Quiz Indovina con indizi in italiano, Sfida a Carte Top Trumps, Enciclopedia della Natura e pacchetto speciale Predatori Supremi: Forti, Veloci & Aggressivi.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }
